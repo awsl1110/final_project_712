@@ -7,12 +7,17 @@ spring boot
 
 
 #### 参与贡献
+1.fork本项目
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+2.将项目克隆到本地
 
+3.创建新的分支，并切换到新分支
+
+4.在新分支上进行开发，并提交代码
+
+5.提交Pull Request到原项目的 test 分支并解决冲突
+
+6.若自动测试结果无异常则由维护者审核及合并。
 ### 贡献者
 
 <a href="https://github.com/awsl1110/final_project_712/graphs/contributors">
