@@ -1,23 +1,10 @@
 # final_project_712
 
 #### 介绍
-创建仓库
-
+javaEE的期末项目
 #### 软件架构
-软件架构说明
+spring boot
 
-
-#### 安装教程
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 使用说明
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
 
 #### 参与贡献
 
@@ -26,4 +13,8 @@
 3.  提交代码
 4.  新建 Pull Request
 
+### 贡献者
 
+<a href="https://github.com/awsl1110/final_project_712/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=awsl1110/final_project_712" />
+</a>
