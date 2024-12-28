@@ -1,5 +1,6 @@
 package _712.final_project_712.service;
 
+import _712.final_project_712.model.LoginResult;
 import _712.final_project_712.model.User;
 
 import java.util.List;
@@ -19,4 +20,19 @@ public interface UserService {
      * @throws RuntimeException 当用户不存在或原密码错误时抛出异常
      */
     boolean updatePassword(Long userId, String oldPassword, String newPassword);
+    
+    /**
+     * 用户登录
+     * @param username 用户名
+     * @param password 密码
+     * @return 登录结果
+     */
+    LoginResult login(String username, String password);
+    
+    /**
+     * 用户注册
+     * @param user 用户信息
+     * @return 注册成功返回true，否则返回false
+     */
+    boolean register(User user);
 } 
