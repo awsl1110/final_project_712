@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "用户管理", description = "用户相关接口")
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/user")
 public class UserController {
     
     @Autowired
@@ -25,7 +25,7 @@ public class UserController {
     private StringRedisTemplate redisTemplate;
     
     @Operation(summary = "修改密码")
-    @PostMapping("/password")
+    @PostMapping("/update_password")
     public Result<?> updatePassword(
             @RequestHeader("Authorization") String token,
             @Parameter(description = "原密码") @RequestParam String oldPassword,
