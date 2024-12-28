@@ -52,6 +52,7 @@ springdoc:
     operations-sorter: alpha
   api-docs:
     path: /v3/api-docs
+    enabled: true
   packages-to-scan: _712.final_project_712.controller
   group-configs:
     - group: 'default'
@@ -62,7 +63,11 @@ knife4j:
   enable: true
   setting:
     language: zh_cn
+    enable-swagger-models: true
+    enable-document-manage: true
     swagger-model-name: 实体类列表
+    enable-version: false
+    enable-reload-cache-parameter: false
   documents:
     - name: 项目文档
       locations: classpath:docs/*
