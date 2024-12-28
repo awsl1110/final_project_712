@@ -44,14 +44,19 @@ spring:
       port: 6379
       username: user712
       password: password
+  session:
+    store-type: none
 server:
   port: 8082
+  servlet:
+    session:
+      timeout: 1800
 mybatis:
   type-aliases-package: com.example.demo.model
   mapper-locations: classpath:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
-# springdoc-openapi项���置
+# springdoc-openapi项置
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
