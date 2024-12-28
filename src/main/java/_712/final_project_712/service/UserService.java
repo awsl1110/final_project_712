@@ -35,4 +35,11 @@ public interface UserService {
      * @return 注册成功返回true，否则返回false
      */
     boolean register(User user);
+    
+    /**
+     * 获取用户邮箱
+     * @param userId 用户ID
+     * @return 用户邮箱
+     */
+    String getUserEmail(Long userId);
 } 
