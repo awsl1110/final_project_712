@@ -33,7 +33,7 @@ spring:
       console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
   data:
     redis:
-      host: 192.168.100.1
+      host: 192.168.1.102
       port: 6379
       username: user712
       password: password
