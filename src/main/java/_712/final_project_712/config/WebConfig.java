@@ -17,8 +17,8 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/api/**")
                 .excludePathPatterns(
-                    "/api/file/avatar/*/**",  // 排除头像访问路径
-                    "/api/email/captcha/**",  // 排除验证码相关接口
+                    "/file/avatar/*/**",  // 排除头像访问路径
+                    "/email/captcha/**",  // 排除验证码相关接口
                     "/swagger-ui/**",         // 排除Swagger相关路径
                     "/v3/api-docs/**"
                 );

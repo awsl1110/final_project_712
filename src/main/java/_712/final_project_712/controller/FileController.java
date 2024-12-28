@@ -21,7 +21,7 @@ import java.nio.file.Files;
 import static _712.final_project_712.model.table.AvatarTableDef.AVATAR;
 
 @RestController
-@RequestMapping("/api/file")
+@RequestMapping("/file")
 @Tag(name = "文件上传接口", description = "处理文件上传相关的接口")
 public class FileController {
 

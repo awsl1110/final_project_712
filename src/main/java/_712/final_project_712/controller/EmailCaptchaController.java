@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 @Tag(name = "邮箱验证码", description = "邮箱验证码的发送接口")
 @RestController
-@RequestMapping("/api/email")
+@RequestMapping("/email")
 public class EmailCaptchaController {
 
     @Autowired
