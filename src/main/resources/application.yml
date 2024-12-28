@@ -13,13 +13,17 @@ spring:
       max-lifetime: 1800000
       connection-timeout: 30000
   mail:
-    username: wenshuntao@qq.com
-    host: smtp.qq.com
-    password: kkk
+    username: newtestemail321@163.com
+    host: smtp.163.com
+    password: XSisH3AwMJu6Nc93
     port: 465
     properties:
       mail:
         smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
           ssl:
             enable: true
   logging:
