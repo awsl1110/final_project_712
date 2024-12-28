@@ -4,6 +4,7 @@ import _712.final_project_712.mapper.UserMapper;
 import _712.final_project_712.model.LoginResult;
 import _712.final_project_712.model.User;
 import _712.final_project_712.service.UserService;
+import _712.final_project_712.util.JwtUtil;
 import com.mybatisflex.core.query.QueryChain;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // 在服务启动时初始化测试账号
     @PostConstruct
@@ -92,13 +96,12 @@ public class UserServiceImpl implements UserService {
                 return LoginResult.fail("密码错误");
             }
             
-            // 生成token (这里简单处理，实际项目中应该使用JWT)
-            String token = "token-" + System.currentTimeMillis();
+            // 生成JWT token
+            String token = jwtUtil.generateToken(user.getId(), user.getName());
             
             // 返回成功结果
             return LoginResult.success(token, user.getId());
         } catch (Exception e) {
-            // 添加异常处理
             e.printStackTrace();
             return LoginResult.fail("登录失败：" + e.getMessage());
         }
