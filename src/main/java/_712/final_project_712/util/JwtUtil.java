@@ -77,7 +77,7 @@ public class JwtUtil {
     }
     
     /**
-     * 从token中获取用��名
+     * 从token中获取用户名
      * @param token JWT token字符串
      * @return 用户名
      */
