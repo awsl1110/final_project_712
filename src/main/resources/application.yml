@@ -52,18 +52,22 @@ springdoc:
     operations-sorter: alpha
   api-docs:
     path: /v3/api-docs
+  packages-to-scan: _712.final_project_712.controller
   group-configs:
-    - group: '后台管理'
+    - group: 'default'
       paths-to-match: '/**'
-      packages-to-scan: com.example.demo.controller.admin
-    - group: '前台'
-      paths-to-match: '/**'
-      packages-to-scan: com.example.demo.controller.user
-# knife4j的增强配置，不需要增强可以不配
+      packages-to-scan: _712.final_project_712.controller
+# knife4j的增强配置
 knife4j:
   enable: true
   setting:
     language: zh_cn
+    swagger-model-name: 实体类列表
+  documents:
+    - name: 项目文档
+      locations: classpath:docs/*
+  basic:
+    enable: false
 jwt:
   secret: qwdcvefwe212wsasawwfaws
   expire: 30
