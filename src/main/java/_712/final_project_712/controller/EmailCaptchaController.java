@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-@Tag(name = "邮箱验证码", description = "邮箱验证码的发送和验证接口")
+@Tag(name = "邮箱验证码", description = "邮箱验证码的发送接口")
 @RestController
 @RequestMapping("/api/email")
 public class EmailCaptchaController {
@@ -55,31 +55,6 @@ public class EmailCaptchaController {
             return ResponseEntity.ok("验证码已发送");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("验证码发送失败：" + e.getMessage());
-        }
-    }
-
-    @Operation(summary = "验证邮箱验证码")
-    @PostMapping("/captcha/verify")
-    public ResponseEntity<String> verifyEmailCaptcha(
-            @Parameter(description = "邮箱地址") @RequestParam String email,
-            @Parameter(description = "验证码") @RequestParam String captcha) {
-        
-        String key = "email:captcha:" + email;
-        String correctCaptcha = redisTemplate.opsForValue().get(key);
-        
-        // 先检查验证码是否存在/过期
-        if (correctCaptcha == null) {
-            return ResponseEntity.badRequest().body("验证码已过期");
-        }
-        
-        // 验证完后删除验证码
-        redisTemplate.delete(key);
-        
-        // 然后再检查验证码是否正确
-        if (correctCaptcha.equals(captcha)) {
-            return ResponseEntity.ok("验证成功");
-        } else {
-            return ResponseEntity.badRequest().body("验证码错误");
         }
     }
 
