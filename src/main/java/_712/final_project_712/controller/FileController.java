@@ -34,7 +34,6 @@ public class FileController {
             @RequestParam("file") MultipartFile file,
             HttpServletRequest request) {
         try {
-            // 从request属性中获取用户ID
             Long userId = (Long) request.getAttribute("userId");
             String fileUrl = fileService.saveAvatar(file, userId);
             return ResponseEntity.ok(fileUrl);
@@ -43,10 +42,16 @@ public class FileController {
         }
     }
 
-    @GetMapping("/avatar/{userId}")
-    @Operation(summary = "获取用户头像信息")
-    public ResponseEntity<?> getUserAvatar(@PathVariable Long userId) {
+    @GetMapping("/avatar")
+    @Operation(
+        summary = "获取当前用户头像信息", 
+        description = "通过token获取当前登录用户的头像信息",
+        security = @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
+    )
+    public ResponseEntity<?> getCurrentUserAvatar(HttpServletRequest request) {
         try {
+            Long userId = (Long) request.getAttribute("userId");
+            
             Avatar avatar = QueryChain.of(Avatar.class)
                     .where(AVATAR.USER_ID.eq(userId))
                     .orderBy(AVATAR.CREATE_TIME.desc())
@@ -54,7 +59,7 @@ public class FileController {
                     .one();
             
             if (avatar == null) {
-                return ResponseEntity.ok("用户暂无头像");
+                return ResponseEntity.ok("您还没有上传过头像");
             }
             
             return ResponseEntity.ok(avatar);
