@@ -1,6 +1,5 @@
 package _712.final_project_712.config;
 
-
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
@@ -8,13 +7,22 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 
-
 @Configuration
 public class SwaggerConfig {
+
+    @Bean
+    public GroupedOpenApi publicApi() {
+        return GroupedOpenApi.builder()
+                .group("public")
+                .pathsToMatch("/**")
+                .build();
+    }
+
     @Bean
     public OpenAPI openAPI() {
         StringBuilder desc = new StringBuilder();
@@ -24,7 +32,7 @@ public class SwaggerConfig {
                         .title("后台管理系统 - 接口文档")
                         .description(desc.toString())
                         .version("V1.0")
-                        .contact(new Contact().name("zhonglm"))
+                        .contact(new Contact().name("712"))
                 )
                 .components(new Components()
                         .addSecuritySchemes(HttpHeaders.AUTHORIZATION,
@@ -36,25 +44,19 @@ public class SwaggerConfig {
                                         .bearerFormat("JWT")
                         )
                );
-
     }
 
-//    @Bean
-//    public GroupedOpenApi adminApi() {
-//        return GroupedOpenApi.builder()
-//                .group("后台接口")
-//                .packagesToScan("com.example.demo.controller")
-//                .displayName("后台管理接口")
-//                .build();
-//    }
     @Bean
     public GlobalOpenApiCustomizer globalOpenApiCustomizer() {
         return openApi -> {
             // 全局添加鉴权参数
             if (openApi.getPaths() != null) {
                 openApi.getPaths().forEach((s, pathItem) -> {
-                    // 登录接口/验证码不需要添加鉴权参数
-                    if (s.equals("/user/login") || s.equals("/user/register")|| s.equals("/user/captcha")|| s.equals("/user/captcha/sendEmail")) {
+                    // 登录接口/验证码/注册等不需要添加鉴权参数
+                    if (s.startsWith("/kaptcha") || 
+                        s.equals("/user/login") || 
+                        s.equals("/user/register") ||
+                        s.equals("/user/captcha/sendEmail")) {
                         return;
                     }
                     // 接口添加鉴权参数
@@ -66,7 +68,4 @@ public class SwaggerConfig {
             }
         };
     }
-
-
-
 }
