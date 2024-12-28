@@ -22,7 +22,7 @@ public class FileController {
     @PostMapping("/avatar")
     @Operation(
         summary = "上传头像", 
-        description = "上传用户头像，需要Bearer Token认证",
+        description = "上传用户头像，需要Token认证",
         security = @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
     )
     public ResponseEntity<String> uploadAvatar(
