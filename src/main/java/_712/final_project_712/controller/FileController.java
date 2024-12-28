@@ -94,34 +94,4 @@ public class FileController {
             }
         }
     }
-
-    @GetMapping("/avatar/{userId}/{fileName}")
-    @Operation(summary = "通过URL直接访问头像")
-    public void getAvatarByUrl(@PathVariable Long userId, 
-                              @PathVariable String fileName, 
-                              HttpServletResponse response) {
-        try {
-            String avatarPath = uploadPath + File.separator + userId + File.separator + fileName;
-            File avatarFile = new File(avatarPath);
-            
-            if (!avatarFile.exists()) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "头像文件不存在");
-                return;
-            }
-            
-            // 设置响应头
-            response.setContentType(MediaType.IMAGE_JPEG_VALUE);
-            response.setHeader("Cache-Control", "max-age=86400"); // 缓存一天
-            
-            // 写入图片数据
-            Files.copy(avatarFile.toPath(), response.getOutputStream());
-            response.getOutputStream().flush();
-            
-        } catch (Exception e) {
-            try {
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "获取头像失败：" + e.getMessage());
-            } catch (Exception ignored) {
-            }
-        }
-    }
 } 
