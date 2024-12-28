@@ -35,16 +35,10 @@ public class RegisterController {
     @Operation(summary = "用户注册")
     @PostMapping("/register")
     public Result<?> register(
-            @Parameter(description = "用户ID (正整数)") @RequestParam Long id,
             @Parameter(description = "用户名 (4-16位字母、数字、下划线)") @RequestParam String username,
             @Parameter(description = "密码 (8-20位，必须包含字母和数字)") @RequestParam String password,
             @Parameter(description = "邮箱") @RequestParam String email) {
         try {
-            // ID验证
-            if (id == null || id <= 0) {
-                return Result.error("用户ID必须是正整数");
-            }
-
             // 用户名验证
             if (!StringUtils.hasText(username)) {
                 return Result.error("用户名不能为空");
@@ -71,7 +65,6 @@ public class RegisterController {
             
             // 创建用户对象
             User user = new User();
-            user.setId(id);
             user.setName(username);
             user.setPassword(password);
             user.setEmail(email);

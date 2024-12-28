@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import jakarta.annotation.PostConstruct;
 import java.util.List;
+import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -20,6 +22,14 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    // 添加验证用的正则表达式
+    private static final Pattern EMAIL_PATTERN = 
+        Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
+    private static final Pattern USERNAME_PATTERN = 
+        Pattern.compile("^[a-zA-Z0-9_]{4,16}$");
+    private static final Pattern PASSWORD_PATTERN = 
+        Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,20}$");
 
     // 在服务启动时初始化测试账号
     @PostConstruct
@@ -109,6 +119,30 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean register(User user) {
+        // 验证用户名
+        if (!StringUtils.hasText(user.getName()) || 
+            !USERNAME_PATTERN.matcher(user.getName()).matches()) {
+            throw new RuntimeException("用户名必须是4-16位字母、数字或下划线");
+        }
+        
+        // 验证密码
+        if (!StringUtils.hasText(user.getPassword()) || 
+            !PASSWORD_PATTERN.matcher(user.getPassword()).matches()) {
+            throw new RuntimeException("密码必须是8-20位，且包含字母和数字");
+        }
+        
+        // 验证邮箱
+        if (!StringUtils.hasText(user.getEmail()) || 
+            !EMAIL_PATTERN.matcher(user.getEmail()).matches()) {
+            throw new RuntimeException("邮箱格式不正确");
+        }
+
+        // 使用时间戳作为ID基础
+        long timestamp = System.currentTimeMillis();
+        // 添加随机数以避免并发冲突
+        long random = (long)(Math.random() * 1000);
+        user.setId(timestamp + random);
+        
         // 实现注册逻辑
         return userMapper.insert(user) > 0;
     }
