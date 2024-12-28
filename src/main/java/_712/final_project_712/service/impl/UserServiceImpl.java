@@ -112,4 +112,13 @@ public class UserServiceImpl implements UserService {
         // 实现注册逻辑
         return userMapper.insert(user) > 0;
     }
+
+    @Override
+    public String getUserEmail(Long userId) {
+        User user = QueryChain.of(User.class)
+                .where(User::getId).eq(userId)
+                .one();
+                
+        return user != null ? user.getEmail() : null;
+    }
 } 
