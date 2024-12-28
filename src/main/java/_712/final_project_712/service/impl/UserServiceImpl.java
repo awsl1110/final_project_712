@@ -125,6 +125,14 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("用户名必须是4-16位字母、数字或下划线");
         }
         
+        // 检查用户名是否已存在
+        User existingUser = QueryChain.of(User.class)
+                .where(User::getName).eq(user.getName())
+                .one();
+        if (existingUser != null) {
+            throw new RuntimeException("用户名已存在");
+        }
+        
         // 验证密码
         if (!StringUtils.hasText(user.getPassword()) || 
             !PASSWORD_PATTERN.matcher(user.getPassword()).matches()) {

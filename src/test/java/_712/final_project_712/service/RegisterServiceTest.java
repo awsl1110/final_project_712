@@ -70,4 +70,30 @@ public class RegisterServiceTest {
         assertThrows(RuntimeException.class, () -> userService.register(user),
                 "无效邮箱应该抛出异常");
     }
+
+    @Test
+    void testDuplicateUsername() {
+        // 创建第一个用户
+        User user1 = new User();
+        user1.setName("testUser123");
+        user1.setPassword("Password123");
+        user1.setEmail("test1@example.com");
+        
+        // 注册第一个用户
+        boolean result1 = userService.register(user1);
+        assertTrue(result1, "第一个用户注册应该成功");
+        
+        // 创建第二个用户，使用相同的用户名
+        User user2 = new User();
+        user2.setName("testUser123"); // 相同的用户名
+        user2.setPassword("Password456");
+        user2.setEmail("test2@example.com");
+        
+        // 尝试注册第二个用户，应该抛出异常
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userService.register(user2);
+        });
+        
+        assertEquals("用户名已存在", exception.getMessage());
+    }
 } 
