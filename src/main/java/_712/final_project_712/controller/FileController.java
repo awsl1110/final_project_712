@@ -24,7 +24,7 @@ public class FileController {
             String fileUrl = fileService.saveAvatar(file, userId);
             return ResponseEntity.ok(fileUrl);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("���像上传失败：" + e.getMessage());
+            return ResponseEntity.badRequest().body("图像上传失败：" + e.getMessage());
         }
     }
 } 
