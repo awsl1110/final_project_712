@@ -8,6 +8,7 @@ import com.mybatisflex.core.query.QueryChain;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import jakarta.annotation.PostConstruct;
 import java.util.List;
 
 @Service
@@ -15,6 +16,29 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserMapper userMapper;
+
+    // 在服务启动时初始化测试账号
+    @PostConstruct
+    public void init() {
+        try {
+            // 检查测试用户是否已存在
+            User existingUser = QueryChain.of(User.class)
+                    .where(User::getName).eq("admin")
+                    .one();
+            
+            if (existingUser == null) {
+                // 创建默认的测试账号
+                User testUser = new User();
+                testUser.setName("admin");
+                testUser.setPassword("123456");
+                testUser.setEmail("admin@test.com");
+                userMapper.insert(testUser);
+                System.out.println("测试账号创建成功 - 用户名: admin, 密码: 123456");
+            }
+        } catch (Exception e) {
+            System.err.println("初始化测试账号失败: " + e.getMessage());
+        }
+    }
 
     @Override
     public List<User> getAllUsers() {
@@ -52,26 +76,32 @@ public class UserServiceImpl implements UserService {
             return LoginResult.fail("密码不能为空");
         }
         
-        // 查询用户
-        User user = QueryChain.of(User.class)
-                .where(User::getName).eq(username)
-                .one();
-                
-        // 用户不存在
-        if (user == null) {
-            return LoginResult.fail("用户不存在");
+        try {
+            // 查询用户
+            User user = QueryChain.of(User.class)
+                    .where(User::getName).eq(username)
+                    .one();
+                    
+            // 用户不存在
+            if (user == null) {
+                return LoginResult.fail("用户不存在");
+            }
+            
+            // 密码验证
+            if (!password.equals(user.getPassword())) {
+                return LoginResult.fail("密码错误");
+            }
+            
+            // 生成token (这里简单处理，实际项目中应该使用JWT)
+            String token = "token-" + System.currentTimeMillis();
+            
+            // 返回成功结果
+            return LoginResult.success(token, user.getId());
+        } catch (Exception e) {
+            // 添加异常处理
+            e.printStackTrace();
+            return LoginResult.fail("登录失败：" + e.getMessage());
         }
-        
-        // 密码验证
-        if (!password.equals(user.getPassword())) {
-            return LoginResult.fail("密码错误");
-        }
-        
-        // TODO: 生成JWT token
-        String token = "dummy-token-" + System.currentTimeMillis();
-        
-        // 返回成功结果
-        return LoginResult.success(token, user.getId());
     }
 
     @Override
