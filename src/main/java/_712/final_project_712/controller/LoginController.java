@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "登录接口", description = "处理用户登录相关的接口")
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/user")
 public class LoginController {
 
     @Autowired
