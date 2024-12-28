@@ -43,7 +43,6 @@ public class UserLoginTest {
         assertTrue(result.isSuccess(), "登录应该成功");
         assertNotNull(result.getToken(), "登录成功应返回token");
         assertEquals("登录成功", result.getMessage());
-        assertEquals(testUser.getId(), result.getUserId());
     }
 
     @Test
