@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
@@ -46,7 +47,7 @@ public class KaptchaController {
         )
     })
     @GetMapping(value = "/code", produces = MediaType.IMAGE_JPEG_VALUE)
-    public void getKaptcha(HttpServletResponse response) throws IOException {
+    public void getKaptcha(HttpServletResponse response, HttpSession session) throws IOException {
         // 生成验证码文本
         String text = defaultKaptcha.createText();
         
@@ -58,6 +59,10 @@ public class KaptchaController {
         
         // 将验证码存入Redis，设置5分钟过期
         redisTemplate.opsForValue().set("kaptcha:" + uuid, text, 5, TimeUnit.MINUTES);
+        
+        // 同时也存入Session，用于登录验证
+        session.setAttribute("captcha", text);
+        System.out.println("Generated Captcha: " + text); // 添加日志
         
         // 将uuid写入响应头
         response.setHeader("Kaptcha-Key", uuid);
