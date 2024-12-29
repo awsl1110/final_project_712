@@ -3,6 +3,7 @@ package _712.final_project_712.service.impl;
 import _712.final_project_712.mapper.AvatarMapper;
 import _712.final_project_712.model.Avatar;
 import _712.final_project_712.service.FileService;
+import com.mybatisflex.core.query.QueryChain;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,7 +70,27 @@ public class FileServiceImpl implements FileService {
             userUploadDir.mkdirs();
         }
 
-        // 保存文件
+        // 查找并删除用户之前的头像
+        try {
+            Avatar oldAvatar = QueryChain.of(Avatar.class)
+                    .where(Avatar::getUserId).eq(userId)
+                    .orderBy(Avatar::getCreateTime).desc()
+                    .limit(1)
+                    .one();
+
+            if (oldAvatar != null) {
+                // 删除旧的头像文件
+                String oldFilePath = userDir + File.separator + oldAvatar.getFileName();
+                Files.deleteIfExists(Paths.get(oldFilePath));
+                
+                // 删除数据库记录
+                avatarMapper.deleteById(oldAvatar.getId());
+            }
+        } catch (Exception e) {
+            log.warn("删除旧头像失败", e);
+        }
+
+        // 保存新文件
         Path path = Paths.get(userDir + File.separator + newFileName);
         Files.write(path, file.getBytes());
 
