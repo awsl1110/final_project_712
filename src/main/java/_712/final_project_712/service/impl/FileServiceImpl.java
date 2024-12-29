@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -32,8 +33,12 @@ public class FileServiceImpl implements FileService {
     public String saveAvatar(MultipartFile file, Long userId) throws Exception {
         log.info("开始保存用户头像，userId: {}", userId);
 
+        if (userId == null) {
+            throw new IllegalArgumentException("用户ID不能为空");
+        }
+
         // 检查文件是否为空
-        if (file.isEmpty()) {
+        if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("上传的文件不能为空");
         }
 
@@ -83,11 +88,17 @@ public class FileServiceImpl implements FileService {
                 throw new RuntimeException("保存头像信息到数据库失败");
             }
         } catch (Exception e) {
+            // 如果数据库操作失败，删除已上传的文件
+            try {
+                Files.deleteIfExists(path);
+            } catch (IOException ex) {
+                log.error("删除文件失败", ex);
+            }
             log.error("保存头像信息到数据库出错", e);
             throw e;
         }
 
-        String fileUrl = "/api/file/avatar/" + userId + "/" + newFileName;
+        String fileUrl = "/file/avatar/" + userId + "/" + newFileName;
         log.info("头像保存成功，访问URL: {}", fileUrl);
         return fileUrl;
     }
