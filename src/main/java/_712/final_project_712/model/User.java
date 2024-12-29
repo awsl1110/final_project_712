@@ -45,4 +45,13 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
+
+    public User() {
+    }
+
+    public User(String name, String password, String email) {
+        this.name = name;
+        this.password = password;
+        this.email = email;
+    }
 }
