@@ -17,11 +17,28 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
 @Service
 public class FileServiceImpl implements FileService {
+
+    private static final Set<String> ALLOWED_CONTENT_TYPES = new HashSet<>(Arrays.asList(
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/gif"
+    ));
+
+    private static final Set<String> ALLOWED_EXTENSIONS = new HashSet<>(Arrays.asList(
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif"
+    ));
 
     @Value("${headImgPath}")
     private String uploadPath;
@@ -45,14 +62,18 @@ public class FileServiceImpl implements FileService {
 
         // 检查文件类型
         String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("只能上传图片文件");
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+            throw new IllegalArgumentException("只支持 JPG、PNG、GIF 格式的图片文件");
         }
 
-        // 获取文件扩展名
+        // 获取文件扩展名并验证
         String originalFilename = file.getOriginalFilename();
         String extension = originalFilename != null ? 
-            originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
+            originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase() : ".jpg";
+            
+        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+            throw new IllegalArgumentException("文件扩展名必须是 .jpg、.jpeg、.png 或 .gif");
+        }
 
         // 生成新的文件名
         String newFileName = UUID.randomUUID() + extension;
