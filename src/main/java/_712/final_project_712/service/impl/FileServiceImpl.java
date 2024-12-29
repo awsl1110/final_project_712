@@ -3,6 +3,7 @@ package _712.final_project_712.service.impl;
 import _712.final_project_712.mapper.AvatarMapper;
 import _712.final_project_712.model.Avatar;
 import _712.final_project_712.service.FileService;
+import com.mybatisflex.core.query.QueryChain;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,11 +17,28 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
 @Service
 public class FileServiceImpl implements FileService {
+
+    private static final Set<String> ALLOWED_CONTENT_TYPES = new HashSet<>(Arrays.asList(
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/gif"
+    ));
+
+    private static final Set<String> ALLOWED_EXTENSIONS = new HashSet<>(Arrays.asList(
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif"
+    ));
 
     @Value("${headImgPath}")
     private String uploadPath;
@@ -44,14 +62,18 @@ public class FileServiceImpl implements FileService {
 
         // 检查文件类型
         String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("只能上传图片文件");
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+            throw new IllegalArgumentException("只支持 JPG、PNG、GIF 格式的图片文件");
         }
 
-        // 获取文件扩展名
+        // 获取文件扩展名并验证
         String originalFilename = file.getOriginalFilename();
         String extension = originalFilename != null ? 
-            originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
+            originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase() : ".jpg";
+            
+        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+            throw new IllegalArgumentException("文件扩展名必须是 .jpg、.jpeg、.png 或 .gif");
+        }
 
         // 生成新的文件名
         String newFileName = UUID.randomUUID() + extension;
@@ -69,7 +91,27 @@ public class FileServiceImpl implements FileService {
             userUploadDir.mkdirs();
         }
 
-        // 保存文件
+        // 查找并删除用户之前的头像
+        try {
+            Avatar oldAvatar = QueryChain.of(Avatar.class)
+                    .where(Avatar::getUserId).eq(userId)
+                    .orderBy(Avatar::getCreateTime).desc()
+                    .limit(1)
+                    .one();
+
+            if (oldAvatar != null) {
+                // 删除旧的头像文件
+                String oldFilePath = userDir + File.separator + oldAvatar.getFileName();
+                Files.deleteIfExists(Paths.get(oldFilePath));
+                
+                // 删除数据库记录
+                avatarMapper.deleteById(oldAvatar.getId());
+            }
+        } catch (Exception e) {
+            log.warn("删除旧头像失败", e);
+        }
+
+        // 保存新文件
         Path path = Paths.get(userDir + File.separator + newFileName);
         Files.write(path, file.getBytes());
 
