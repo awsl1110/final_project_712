@@ -119,13 +119,6 @@ const handleLogin = async () => {
   align-items: center;
   background-color: #f5f5f5;
   
-  .login-card {
-    width: 420px;
-    
-    .card-header {
-      text-align: center;
-    }
-  }
 }
 
 .login-form {
@@ -142,11 +135,9 @@ const handleLogin = async () => {
     cursor: pointer;
   }
 }
-
 .login-button {
   width: 100%;
 }
-
 .register-text {
   margin-top: 16px;
   text-align: center;
