@@ -7,7 +7,7 @@
         </div>
       </template>
       
-      <el-form ref="formRef" :model="loginForm" :rules="rules">
+      <el-form ref="formRef" :model="loginForm" :rules="rules" class="login-form">
         <el-form-item prop="username">
           <el-input v-model="loginForm.username" placeholder="用户名">
             <template #prefix>
@@ -36,12 +36,15 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" :loading="loading" @click="handleLogin" block>
+          <el-button type="primary" :loading="loading" @click="handleLogin" class="login-button">
             登录
           </el-button>
-          <el-link type="primary" @click="router.push('/register')" class="register-link">
-            没有账号？去注册
-          </el-link>
+          <div class="register-text">
+            没有账号？
+            <el-button link type="primary" @click="router.push('/register')">
+              注册
+            </el-button>
+          </div>
         </el-form-item>
       </el-form>
     </el-card>
@@ -117,28 +120,35 @@ const handleLogin = async () => {
   background-color: #f5f5f5;
   
   .login-card {
-    width: 400px;
+    width: 420px;
     
     .card-header {
       text-align: center;
-      font-size: 20px;
-    }
-    
-    .captcha-container {
-      display: flex;
-      gap: 12px;
-      
-      .captcha-img {
-        height: 40px;
-        cursor: pointer;
-      }
-    }
-
-    .register-link {
-      display: block;
-      text-align: center;
-      margin-top: 12px;
     }
   }
+}
+
+.login-form {
+  width: 280px;
+  margin: 0 auto;
+}
+
+.captcha-container {
+  display: flex;
+  gap: 12px;
+  
+  .captcha-img {
+    height: 40px;
+    cursor: pointer;
+  }
+}
+
+.login-button {
+  width: 100%;
+}
+
+.register-text {
+  margin-top: 16px;
+  text-align: center;
 }
 </style> 
