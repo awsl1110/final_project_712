@@ -15,11 +15,14 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
-                .addPathPatterns("/api/**")
+                .addPathPatterns("/file/**")
                 .excludePathPatterns(
-                    "/file/avatar/*/**",  // 排除头像访问路径
-                    "/email/captcha/**",  // 排除验证码相关接口
-                    "/swagger-ui/**",         // 排除Swagger相关路径
+                    "/file/avatar/*/view/**",
+                    "/kaptcha/**",
+                    "/user/login",
+                    "/user/register",
+                    "/email/captcha/**",
+                    "/swagger-ui/**",
                     "/v3/api-docs/**"
                 );
     }

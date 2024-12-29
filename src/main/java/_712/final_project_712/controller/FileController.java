@@ -8,9 +8,11 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import java.io.File;
 import java.nio.file.Files;
 import static _712.final_project_712.model.table.AvatarTableDef.AVATAR;
 
+@Slf4j
 @RestController
 @RequestMapping("/file")
 @Tag(name = "文件上传接口", description = "处理文件上传相关的接口")
@@ -42,9 +45,18 @@ public class FileController {
             HttpServletRequest request) {
         try {
             Long userId = (Long) request.getAttribute("userId");
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("未登录或token无效");
+            }
+            
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest().body("请选择要上传的文件");
+            }
+            
             String fileUrl = fileService.saveAvatar(file, userId);
             return ResponseEntity.ok(fileUrl);
         } catch (Exception e) {
+            log.error("头像上传失败", e);
             return ResponseEntity.badRequest().body("头像上传失败：" + e.getMessage());
         }
     }
