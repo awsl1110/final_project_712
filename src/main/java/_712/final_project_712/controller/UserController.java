@@ -73,11 +73,7 @@ public class UserController {
             
             // 修改密码
             boolean result = userService.updatePassword(userId, oldPassword, newPassword);
-            if (result) {
-                return Result.success("密码修改成功");
-            } else {
-                return Result.error("密码修改失败");
-            }
+            return Result.success("密码修改成功");
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());
         }
