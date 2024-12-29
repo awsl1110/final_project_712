@@ -7,15 +7,15 @@ spring boot
 ### 文件目录说明
 _712.final_project_712:
 ```
-├── advice/ # 全局异常处理和响应处理的通知类
-├── config/ # 配置类（Redis、MyBatis、Security等）
-├── controller/ # REST API 控制器
-├── Exception/ # 自定义异常类
+├── advice/      # 全局异常处理和响应处理的通知类
+├── config/      # 配置类（Redis、MyBatis、Security等）
+├── controller/  # REST API 控制器
+├── Exception/   # 自定义异常类
 ├── interceptor/ # 拦截器
-├── mapper/ # MyBatis 数据库访问接口
-├── model/ # 实体类/数据模型
-├── service/ # 业务逻辑层
-└── util/ # 工具类
+├── mapper/      # MyBatis 数据库访问接口
+├── model/       # 实体类/数据模型
+├── service/     # 业务逻辑层
+└── util/        # 工具类
 ```
 
 #### 参与贡献
