@@ -1,6 +1,6 @@
 package _712.final_project_712.service.impl;
 
-import _712.final_project_712.dto.CategoryDTO;
+import _712.final_project_712.model.dto.CategoryDTO;
 import _712.final_project_712.mapper.ProductCategoryMapper;
 import _712.final_project_712.model.ProductCategory;
 import _712.final_project_712.service.CategoryService;

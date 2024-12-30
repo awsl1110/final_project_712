@@ -1,6 +1,6 @@
 package _712.final_project_712.controller;
 
-import _712.final_project_712.dto.CategoryDTO;
+import _712.final_project_712.model.dto.CategoryDTO;
 import _712.final_project_712.service.CategoryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +50,7 @@ public class CategoryControllerTest {
         // 执行测试并验证结果
         mockMvc.perform(get("/categories"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data[0].id").value(1))
                 .andExpect(jsonPath("$.data[0].name").value("电脑"))
                 .andExpect(jsonPath("$.data[0].children[0].name").value("笔记本"));
@@ -71,6 +72,7 @@ public class CategoryControllerTest {
         // 执行测试并验证结果
         mockMvc.perform(get("/categories/level/1"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data[0].id").value(1))
                 .andExpect(jsonPath("$.data[0].name").value("电脑"))
                 .andExpect(jsonPath("$.data[0].level").value(1));
@@ -92,6 +94,7 @@ public class CategoryControllerTest {
         // 执行测试并验证结果
         mockMvc.perform(get("/categories/1/children"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data[0].id").value(2))
                 .andExpect(jsonPath("$.data[0].name").value("笔记本"))
                 .andExpect(jsonPath("$.data[0].parentId").value(1));

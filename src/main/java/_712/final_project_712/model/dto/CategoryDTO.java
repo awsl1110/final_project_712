@@ -1,4 +1,4 @@
-package _712.final_project_712.dto;
+package _712.final_project_712.model.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

@@ -1,6 +1,7 @@
 package _712.final_project_712.controller;
 
-import _712.final_project_712.dto.CategoryDTO;
+import _712.final_project_712.model.Result;
+import _712.final_project_712.model.dto.CategoryDTO;
 import _712.final_project_712.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,23 +19,23 @@ public class CategoryController {
 
     @Operation(summary = "获取所有分类")
     @GetMapping
-    public List<CategoryDTO> getAllCategories() {
-        return categoryService.getAllCategories();
+    public Result<List<CategoryDTO>> getAllCategories() {
+        return Result.success(categoryService.getAllCategories());
     }
 
     @Operation(summary = "获取指定层级的分类")
     @GetMapping("/level/{level}")
-    public List<CategoryDTO> getCategoriesByLevel(
+    public Result<List<CategoryDTO>> getCategoriesByLevel(
         @Parameter(description = "分类层级") @PathVariable Integer level
     ) {
-        return categoryService.getCategoriesByLevel(level);
+        return Result.success(categoryService.getCategoriesByLevel(level));
     }
 
     @Operation(summary = "获取子分类")
     @GetMapping("/{parentId}/children")
-    public List<CategoryDTO> getSubCategories(
+    public Result<List<CategoryDTO>> getSubCategories(
         @Parameter(description = "父分类ID") @PathVariable Long parentId
     ) {
-        return categoryService.getSubCategories(parentId);
+        return Result.success(categoryService.getSubCategories(parentId));
     }
 } 
