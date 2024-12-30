@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
-import static _712.final_project_712.model.table.OrdersTableDef.ORDERS;
 
 @Service
 public class OrderServiceImpl implements OrderService {
