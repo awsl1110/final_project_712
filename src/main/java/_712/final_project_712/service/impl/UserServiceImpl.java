@@ -82,39 +82,34 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public LoginResult login(String username, String password) {
-        // 参数校验
+        // 参数验证
         if (!StringUtils.hasText(username)) {
             return LoginResult.fail("用户名不能为空");
         }
         if (!StringUtils.hasText(password)) {
             return LoginResult.fail("密码不能为空");
         }
-        
-        try {
-            // 查询用户
-            User user = QueryChain.of(User.class)
-                    .where(User::getName).eq(username)
-                    .one();
-                    
-            // 用户不存在
-            if (user == null) {
-                return LoginResult.fail("用户不存在");
-            }
-            
-            // 密码验证
-            if (!password.equals(user.getPassword())) {
-                return LoginResult.fail("密码错误");
-            }
-            
-            // 生成JWT token
-            String token = jwtUtil.generateToken(user.getId(), user.getName());
-            
-            // 返回成功结果
-            return LoginResult.success(token, user.getId());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return LoginResult.fail("登录失败：" + e.getMessage());
+
+        // 查询用户
+        User user = QueryChain.of(User.class)
+                .where(User::getName).eq(username)
+                .one();
+
+        // 验证用户是否存在
+        if (user == null) {
+            return LoginResult.fail("用户不存在");
         }
+
+        // 验证密码
+        if (!password.equals(user.getPassword())) {
+            return LoginResult.fail("密码错误");
+        }
+
+        // 生成token
+        String token = jwtUtil.generateToken(user.getId(), user.getName());
+        
+        // 返回登录成功结果，现在只需要传入token
+        return LoginResult.success(token);
     }
 
     @Override

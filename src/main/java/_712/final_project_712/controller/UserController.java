@@ -1,5 +1,6 @@
 package _712.final_project_712.controller;
 
+import _712.final_project_712.model.LoginResult;
 import _712.final_project_712.model.Result;
 import _712.final_project_712.service.UserService;
 import _712.final_project_712.util.JwtUtil;
@@ -8,7 +9,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpSession;
 
 @Tag(name = "用户管理", description = "用户相关接口")
 @RestController
@@ -23,6 +26,38 @@ public class UserController {
     
     @Autowired
     private StringRedisTemplate redisTemplate;
+    
+    @Operation(summary = "用户登录", description = "通过用户名、密码和验证码进行登录")
+    @PostMapping("/login")
+    public LoginResult login(
+            @Parameter(description = "用户名", required = true) @RequestParam String username,
+            @Parameter(description = "密码", required = true) @RequestParam String password,
+            @Parameter(description = "验证码", required = true) @RequestParam String captcha,
+            HttpSession session) {
+        
+        try {
+            // 获取session中的验证码
+            String realCaptcha = (String) session.getAttribute("captcha");
+            
+            // 验证码为空或已过期
+            if (realCaptcha == null) {
+                return new LoginResult(false, "验证码已过期，请重新获取", null);
+            }
+            
+            // 验证码不匹配（忽略大小写）
+            if (!realCaptcha.equalsIgnoreCase(captcha)) {
+                return new LoginResult(false, "验证码错误", null);
+            }
+            
+            // 验证码正确，清除session中的验证码
+            session.removeAttribute("captcha");
+            
+            // 调用登录服务
+            return userService.login(username, password);
+        } catch (Exception e) {
+            return new LoginResult(false, "系统错误：" + e.getMessage(), null);
+        }
+    }
     
     @Operation(summary = "修改密码")
     @PostMapping("/update_password")
