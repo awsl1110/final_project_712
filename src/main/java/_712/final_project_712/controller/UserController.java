@@ -1,6 +1,5 @@
 package _712.final_project_712.controller;
 
-import _712.final_project_712.model.LoginResult;
 import _712.final_project_712.model.Result;
 import _712.final_project_712.model.User;
 import _712.final_project_712.service.UserService;
@@ -29,7 +28,7 @@ public class UserController {
     
     @Operation(summary = "用户登录", description = "通过用户名、密码和验证码进行登录")
     @PostMapping("/login")
-    public LoginResult login(
+    public Result<?> login(
             @Parameter(description = "用户名", required = true) @RequestParam String username,
             @Parameter(description = "密码", required = true) @RequestParam String password,
             @Parameter(description = "验证码", required = true) @RequestParam String captcha,
@@ -41,21 +40,22 @@ public class UserController {
             
             // 验证码为空或已过期
             if (realCaptcha == null) {
-                return new LoginResult(false, "验证码已过期，请重新获取", null);
+                return Result.error("验证码已过期，请重新获取");
             }
             
             // 验证码不匹配（忽略大小写）
             if (!realCaptcha.equalsIgnoreCase(captcha)) {
-                return new LoginResult(false, "验证码错误", null);
+                return Result.error("验证码错误");
             }
             
             // 验证码正确，清除session中的验证码
             session.removeAttribute("captcha");
             
             // 调用登录服务
-            return userService.login(username, password);
+            String token = userService.login(username, password);
+            return Result.success(token);
         } catch (Exception e) {
-            return new LoginResult(false, "系统错误：" + e.getMessage(), null);
+            return Result.error("系统错误：" + e.getMessage());
         }
     }
     

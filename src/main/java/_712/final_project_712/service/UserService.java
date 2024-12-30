@@ -1,6 +1,5 @@
 package _712.final_project_712.service;
 
-import _712.final_project_712.model.LoginResult;
 import _712.final_project_712.model.User;
 
 import java.util.List;
@@ -27,7 +26,7 @@ public interface UserService {
      * @param password 密码
      * @return 登录结果
      */
-    LoginResult login(String username, String password);
+    String login(String username, String password);
     
     /**
      * 用户注册

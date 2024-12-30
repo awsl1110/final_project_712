@@ -1,7 +1,6 @@
 package _712.final_project_712.service.impl;
 
 import _712.final_project_712.mapper.UserMapper;
-import _712.final_project_712.model.LoginResult;
 import _712.final_project_712.model.User;
 import _712.final_project_712.service.UserService;
 import _712.final_project_712.util.JwtUtil;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import jakarta.annotation.PostConstruct;
 import java.util.List;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
@@ -81,13 +79,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginResult login(String username, String password) {
+    public String login(String username, String password) {
         // 参数验证
         if (!StringUtils.hasText(username)) {
-            return LoginResult.fail("用户名不能为空");
+            throw new RuntimeException("用户名不能为空");
         }
         if (!StringUtils.hasText(password)) {
-            return LoginResult.fail("密码不能为空");
+            throw new RuntimeException("密码不能为空");
         }
 
         // 查询用户
@@ -97,19 +95,16 @@ public class UserServiceImpl implements UserService {
 
         // 验证用户是否存在
         if (user == null) {
-            return LoginResult.fail("用户不存在");
+            throw new RuntimeException("用户不存在");
         }
 
         // 验证密码
         if (!password.equals(user.getPassword())) {
-            return LoginResult.fail("密码错误");
+            throw new RuntimeException("密码错误");
         }
 
-        // 生成token
-        String token = jwtUtil.generateToken(user.getId(), user.getName());
-        
-        // 返回登录成功结果，现在只需要传入token
-        return LoginResult.success(token);
+        // 生成token并返回
+        return jwtUtil.generateToken(user.getId(), user.getName());
     }
 
     @Override
