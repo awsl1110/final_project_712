@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpSession;
+import java.util.HashMap;
 
 @Tag(name = "用户管理", description = "用户相关接口")
 @RestController
@@ -53,7 +54,9 @@ public class UserController {
             
             // 调用登录服务
             String token = userService.login(username, password);
-            return Result.success(token);
+            return Result.success(new HashMap<String, String>() {{
+                put("token", token);
+            }});
         } catch (Exception e) {
             return Result.error("系统错误：" + e.getMessage());
         }
@@ -99,6 +102,7 @@ public class UserController {
             }
             
             // 验证token是否有效
+            System.out.println("token: " + token);
             if (!jwtUtil.validateToken(token)) {
                 return Result.error(401, "token已过期或无效");
             }
