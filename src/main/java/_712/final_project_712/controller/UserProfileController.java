@@ -1,8 +1,10 @@
 package _712.final_project_712.controller;
 
 import _712.final_project_712.model.Result;
-import _712.final_project_712.model.dto.UpdateProfileRequest;
+import _712.final_project_712.model.dto.AddAddressRequest;
+import _712.final_project_712.model.dto.UpdateUserRequest;
 import _712.final_project_712.model.dto.UserInfoResponse;
+import _712.final_project_712.model.dto.UpdateAddressRequest;
 import _712.final_project_712.service.UserProfileService;
 import _712.final_project_712.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,12 +25,12 @@ public class UserProfileController {
     @Autowired
     private JwtUtil jwtUtil;
     
-    @Operation(summary = "更新用户信息", description = "更新用户的邮箱和地址信息")
-    @PutMapping
-    public Result<?> updateProfile(
+    @Operation(summary = "修改用户信息", description = "修改用户的基本信息")
+    @PutMapping("/info")
+    public Result<?> updateUserInfo(
             @Parameter(description = "用户token", required = true)
             @RequestHeader("Authorization") String token,
-            @RequestBody UpdateProfileRequest request
+            @RequestBody UpdateUserRequest request
     ) {
         if (!StringUtils.hasText(token)) {
             return Result.error(401, "token不能为空");
@@ -41,8 +43,33 @@ public class UserProfileController {
         Long userId = jwtUtil.getUserIdFromToken(token);
         
         try {
-            userProfileService.updateUserProfile(userId, request);
-            return Result.success("用户信息更新成功");
+            userProfileService.updateUserInfo(userId, request);
+            return Result.success("用户信息修改成功");
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
+    }
+    
+    @Operation(summary = "新增收货地址", description = "新增用户收货地址")
+    @PostMapping("/address")
+    public Result<?> addAddress(
+            @Parameter(description = "用户token", required = true)
+            @RequestHeader("Authorization") String token,
+            @RequestBody AddAddressRequest request
+    ) {
+        if (!StringUtils.hasText(token)) {
+            return Result.error(401, "token不能为空");
+        }
+        
+        if (!jwtUtil.validateToken(token)) {
+            return Result.error(401, "token已过期或无效");
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        
+        try {
+            userProfileService.addAddress(userId, request);
+            return Result.success("收货地址添加成功");
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());
         }
@@ -92,6 +119,33 @@ public class UserProfileController {
         try {
             userProfileService.deleteAddress(userId, addressId);
             return Result.success("地址删除成功");
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
+    }
+    
+    @Operation(summary = "修改收货地址", description = "修改用户的收货地址信息")
+    @PutMapping("/address/{addressId}")
+    public Result<?> updateAddress(
+            @Parameter(description = "用户token", required = true)
+            @RequestHeader("Authorization") String token,
+            @Parameter(description = "地址ID", required = true)
+            @PathVariable Long addressId,
+            @RequestBody UpdateAddressRequest request
+    ) {
+        if (!StringUtils.hasText(token)) {
+            return Result.error(401, "token不能为空");
+        }
+        
+        if (!jwtUtil.validateToken(token)) {
+            return Result.error(401, "token已过期或无效");
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        
+        try {
+            userProfileService.updateAddress(userId, addressId, request);
+            return Result.success("收货地址修改成功");
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());
         }

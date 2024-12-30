@@ -4,8 +4,10 @@ import _712.final_project_712.mapper.UserMapper;
 import _712.final_project_712.mapper.UserAddressMapper;
 import _712.final_project_712.model.User;
 import _712.final_project_712.model.UserAddress;
-import _712.final_project_712.model.dto.UpdateProfileRequest;
+import _712.final_project_712.model.dto.AddAddressRequest;
+import _712.final_project_712.model.dto.UpdateUserRequest;
 import _712.final_project_712.model.dto.UserInfoResponse;
+import _712.final_project_712.model.dto.UpdateAddressRequest;
 import _712.final_project_712.service.UserProfileService;
 import com.mybatisflex.core.query.QueryChain;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +33,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     @Transactional
-    public void updateUserProfile(Long userId, UpdateProfileRequest request) {
+    public void updateUserInfo(Long userId, UpdateUserRequest request) {
         User user = QueryChain.of(User.class)
                 .where(User::getId).eq(userId)
                 .one();
@@ -40,60 +42,73 @@ public class UserProfileServiceImpl implements UserProfileService {
             throw new RuntimeException("用户不存在");
         }
         
-        // 1. 更新邮箱
+        // 更新用户名
+        if (StringUtils.hasText(request.getName())) {
+            // 检查用户名是否已被使用
+            User existingUser = QueryChain.of(User.class)
+                    .where(User::getName).eq(request.getName())
+                    .and(User::getId).ne(userId)
+                    .one();
+            if (existingUser != null) {
+                throw new RuntimeException("用户名已被使用");
+            }
+            user.setName(request.getName());
+        }
+        
+        // 更新邮箱
         if (StringUtils.hasText(request.getEmail())) {
             // 验证邮箱格式
             if (!EMAIL_PATTERN.matcher(request.getEmail()).matches()) {
                 throw new RuntimeException("邮箱格式不正确");
             }
             user.setEmail(request.getEmail());
-            userMapper.update(user);
         }
         
-        // 2. 更新地址
-        if (request.getAddress() != null) {
-            UpdateProfileRequest.AddressInfo addrInfo = request.getAddress();
-            
-            // 验证地址信息完整性
-            if (!StringUtils.hasText(addrInfo.getReceiverName())) {
-                throw new RuntimeException("收货人姓名不能为空");
-            }
-            if (!StringUtils.hasText(addrInfo.getReceiverPhone())) {
-                throw new RuntimeException("收货人电话不能为空");
-            }
-            if (!StringUtils.hasText(addrInfo.getProvince())) {
-                throw new RuntimeException("省份不能为空");
-            }
-            if (!StringUtils.hasText(addrInfo.getCity())) {
-                throw new RuntimeException("城市不能为空");
-            }
-            if (!StringUtils.hasText(addrInfo.getDistrict())) {
-                throw new RuntimeException("区/县不能为空");
-            }
-            if (!StringUtils.hasText(addrInfo.getDetailAddress())) {
-                throw new RuntimeException("详细地址不能为空");
-            }
-            
-            // 如果设置为默认地址，先将其他地址设置为非默认
-            if (Boolean.TRUE.equals(addrInfo.getIsDefault())) {
-                addressMapper.updateNonDefault(userId);
-            }
-            
-            // 创建新地址
-            UserAddress address = new UserAddress();
-            address.setUserId(userId);
-            address.setReceiverName(addrInfo.getReceiverName());
-            address.setReceiverPhone(addrInfo.getReceiverPhone());
-            address.setProvince(addrInfo.getProvince());
-            address.setCity(addrInfo.getCity());
-            address.setDistrict(addrInfo.getDistrict());
-            address.setDetailAddress(addrInfo.getDetailAddress());
-            address.setIsDefault(addrInfo.getIsDefault());
-            address.setCreateTime(LocalDateTime.now());
-            address.setUpdateTime(LocalDateTime.now());
-            
-            addressMapper.insert(address);
+        userMapper.update(user);
+    }
+
+    @Override
+    @Transactional
+    public void addAddress(Long userId, AddAddressRequest request) {
+        // 验证地址信息完整性
+        if (!StringUtils.hasText(request.getReceiverName())) {
+            throw new RuntimeException("收货人姓名不能为空");
         }
+        if (!StringUtils.hasText(request.getReceiverPhone())) {
+            throw new RuntimeException("收货人电话不能为空");
+        }
+        if (!StringUtils.hasText(request.getProvince())) {
+            throw new RuntimeException("省份不能为空");
+        }
+        if (!StringUtils.hasText(request.getCity())) {
+            throw new RuntimeException("城市不能为空");
+        }
+        if (!StringUtils.hasText(request.getDistrict())) {
+            throw new RuntimeException("区/县不能为空");
+        }
+        if (!StringUtils.hasText(request.getDetailAddress())) {
+            throw new RuntimeException("详细地址不能为空");
+        }
+        
+        // 如果设置为默认地址，先将其他地址设置为非默认
+        if (Boolean.TRUE.equals(request.getIsDefault())) {
+            addressMapper.updateNonDefault(userId);
+        }
+        
+        // 创建新地址
+        UserAddress address = new UserAddress();
+        address.setUserId(userId);
+        address.setReceiverName(request.getReceiverName());
+        address.setReceiverPhone(request.getReceiverPhone());
+        address.setProvince(request.getProvince());
+        address.setCity(request.getCity());
+        address.setDistrict(request.getDistrict());
+        address.setDetailAddress(request.getDetailAddress());
+        address.setIsDefault(request.getIsDefault());
+        address.setCreateTime(LocalDateTime.now());
+        address.setUpdateTime(LocalDateTime.now());
+        
+        addressMapper.insert(address);
     }
 
     @Override
@@ -155,5 +170,56 @@ public class UserProfileServiceImpl implements UserProfileService {
         
         // 删除地址
         addressMapper.deleteById(addressId);
+    }
+
+    @Override
+    @Transactional
+    public void updateAddress(Long userId, Long addressId, UpdateAddressRequest request) {
+        // 查询地址是否存在且属于该用户
+        UserAddress address = QueryChain.of(UserAddress.class)
+                .where(UserAddress::getId).eq(addressId)
+                .and(UserAddress::getUserId).eq(userId)
+                .one();
+                
+        if (address == null) {
+            throw new RuntimeException("地址不存在或不属于该用户");
+        }
+        
+        // 验证地址信息完整性
+        if (!StringUtils.hasText(request.getReceiverName())) {
+            throw new RuntimeException("收货人姓名不能为空");
+        }
+        if (!StringUtils.hasText(request.getReceiverPhone())) {
+            throw new RuntimeException("收货人电话不能为空");
+        }
+        if (!StringUtils.hasText(request.getProvince())) {
+            throw new RuntimeException("省份不能为空");
+        }
+        if (!StringUtils.hasText(request.getCity())) {
+            throw new RuntimeException("城市不能为空");
+        }
+        if (!StringUtils.hasText(request.getDistrict())) {
+            throw new RuntimeException("区/县不能为空");
+        }
+        if (!StringUtils.hasText(request.getDetailAddress())) {
+            throw new RuntimeException("详细地址不能为空");
+        }
+        
+        // 如果设置为默认地址，先将其他地址设置为非默认
+        if (Boolean.TRUE.equals(request.getIsDefault()) && !Boolean.TRUE.equals(address.getIsDefault())) {
+            addressMapper.updateNonDefault(userId);
+        }
+        
+        // 更新地址信息
+        address.setReceiverName(request.getReceiverName());
+        address.setReceiverPhone(request.getReceiverPhone());
+        address.setProvince(request.getProvince());
+        address.setCity(request.getCity());
+        address.setDistrict(request.getDistrict());
+        address.setDetailAddress(request.getDetailAddress());
+        address.setIsDefault(request.getIsDefault());
+        address.setUpdateTime(LocalDateTime.now());
+        
+        addressMapper.update(address);
     }
 } 
