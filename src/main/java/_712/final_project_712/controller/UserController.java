@@ -2,6 +2,7 @@ package _712.final_project_712.controller;
 
 import _712.final_project_712.model.LoginResult;
 import _712.final_project_712.model.Result;
+import _712.final_project_712.model.User;
 import _712.final_project_712.service.UserService;
 import _712.final_project_712.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,7 +10,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpSession;
 
@@ -59,14 +59,39 @@ public class UserController {
         }
     }
     
+    @Operation(summary = "用户注册", description = "注册新用户")
+    @PostMapping("/register")
+    public Result<?> register(
+            @Parameter(description = "用户名", required = true) @RequestParam String username,
+            @Parameter(description = "密码", required = true) @RequestParam String password,
+            @Parameter(description = "邮箱", required = true) @RequestParam String email) {
+        try {
+            // 创建用户对象
+            User user = new User();
+            user.setName(username);
+            user.setPassword(password);
+            user.setEmail(email);
+            
+            // 调用注册服务
+            boolean success = userService.register(user);
+            
+            if (success) {
+                return Result.success("注册成功");
+            } else {
+                return Result.error("注册失败");
+            }
+        } catch (Exception e) {
+            return Result.error("注册失败：" + e.getMessage());
+        }
+    }
+    
     @Operation(summary = "修改密码")
     @PostMapping("/update_password")
     public Result<?> updatePassword(
             @RequestHeader("Authorization") String token,
             @Parameter(description = "原密码") @RequestParam String oldPassword,
             @Parameter(description = "新密码") @RequestParam String newPassword,
-            @Parameter(description = "邮箱验证码") @RequestParam String emailCode
-    ) {
+            @Parameter(description = "邮箱验证码") @RequestParam String emailCode) {
         try {
             // 验证token是否为空
             if (token == null || token.isEmpty()) {
