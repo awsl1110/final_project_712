@@ -102,7 +102,6 @@ public class UserController {
             }
             
             // 验证token是否有效
-            System.out.println("token: " + token);
             if (!jwtUtil.validateToken(token)) {
                 return Result.error(401, "token已过期或无效");
             }
