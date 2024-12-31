@@ -70,8 +70,7 @@ public class SwaggerConfig {
                             s.equals("/user/register") ||
                             s.equals("/email/captcha/send") ||
                             s.equals("/review/list") ||
-                            s.startsWith("/product/list") ||
-                            s.startsWith("/product/detail")) {
+                            s.startsWith("/product")) {
                         return;
                     }
                     // 接口添加鉴权参数

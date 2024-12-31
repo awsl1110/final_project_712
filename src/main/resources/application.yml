@@ -89,7 +89,7 @@ knife4j:
   basic:
     enable: false
 jwt:
-  secret: qwdcvefwe212wsasawwfaws
+  secret: 8119E8E2FC8E13E090E85E3C1F7A2F6B8119E8E2FC8E13E090E85E3C1F7A2F6B
   expire: 30
   issuer: zzzlm
 headImgPath: "d:/images/headImg"
