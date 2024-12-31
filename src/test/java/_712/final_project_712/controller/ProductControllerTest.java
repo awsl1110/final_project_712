@@ -1,7 +1,9 @@
 package _712.final_project_712.controller;
 
 import _712.final_project_712.model.dto.ProductDTO;
+import _712.final_project_712.model.ProductCategory;
 import _712.final_project_712.service.ProductService;
+import _712.final_project_712.service.ProductCategoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,13 +32,17 @@ public class ProductControllerTest {
 
     @MockBean
     private ProductService productService;
+    
+    @MockBean
+    private ProductCategoryService categoryService;
 
     private ProductDTO testProduct;
     private List<ProductDTO> testProducts;
+    private List<ProductCategory> testCategories;
 
     @BeforeEach
     void setUp() {
-        // 创建测试数据
+        // 创建商品测试数据
         testProduct = new ProductDTO();
         testProduct.setId(1L);
         testProduct.setName("测试商品");
@@ -53,8 +59,18 @@ public class ProductControllerTest {
 
         testProducts = Arrays.asList(testProduct);
 
+        // 创建分类测试数据
+        ProductCategory category = new ProductCategory();
+        category.setId(1L);
+        category.setName("测试分类");
+        category.setCreateTime(LocalDateTime.now());
+        category.setUpdateTime(LocalDateTime.now());
+
+        testCategories = Arrays.asList(category);
+
         // 配置Mock行为
         when(productService.getProductsByCategory(1L)).thenReturn(testProducts);
+        when(categoryService.getAllCategories()).thenReturn(testCategories);
     }
 
     @Test
@@ -75,5 +91,24 @@ public class ProductControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(500))
                 .andExpect(jsonPath("$.message").value("无效的分类ID"));
+    }
+
+    @Test
+    void testGetAllCategories() throws Exception {
+        mockMvc.perform(get("/product/categories"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data[0].name").value("测试分类"));
+
+        // 测试异常情况
+        when(categoryService.getAllCategories())
+                .thenThrow(new RuntimeException("测试异常"));
+
+        mockMvc.perform(get("/product/categories"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(500))
+                .andExpect(jsonPath("$.message").value("获取分类列表失败：测试异常"));
     }
 } 
