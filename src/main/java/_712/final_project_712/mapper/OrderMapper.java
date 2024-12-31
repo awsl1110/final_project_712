@@ -13,13 +13,15 @@ import java.util.List;
 @Mapper
 public interface OrderMapper extends BaseMapper<Orders> {
     
-    @Select("SELECT o.*, u.name as user_name, u.email as user_email " +
+    @Select("SELECT o.*, u.name as user_name, u.email as user_email, " +
+            "o.receiver_name, o.receiver_phone, o.address " +
             "FROM orders o " +
             "LEFT JOIN user u ON o.user_id = u.id " +
             "ORDER BY o.create_time DESC")
     List<OrderDTO.OrderInfo> getAllOrders();
     
-    @Select("SELECT o.*, u.name as user_name, u.email as user_email " +
+    @Select("SELECT o.*, u.name as user_name, u.email as user_email, " +
+            "o.receiver_name, o.receiver_phone, o.address " +
             "FROM orders o " +
             "LEFT JOIN user u ON o.user_id = u.id " +
             "WHERE o.id = #{orderId}")
