@@ -19,10 +19,10 @@ public class OrderServiceImpl implements OrderService {
     private OrderMapper orderMapper;
 
     @Override
-    public List<OrderDTO.OrderInfo> getAllOrders() {
+    public List<OrderDTO.OrderInfo> getUserOrders(Long userId) {
         try {
-            // 获取所有订单
-            List<OrderDTO.OrderInfo> orders = orderMapper.getAllOrders();
+            // 获取用户的订单
+            List<OrderDTO.OrderInfo> orders = orderMapper.getUserOrders(userId);
             
             // 获取每个订单的商品信息
             for (OrderDTO.OrderInfo order : orders) {
