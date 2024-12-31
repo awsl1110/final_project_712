@@ -19,7 +19,7 @@ public class SwaggerConfig {
     public GroupedOpenApi userApi() {
         return GroupedOpenApi.builder()
                 .group("用户相关")
-                .pathsToMatch("/user/**", "/kaptcha/**", "/email/**", "/file/avatar/**", "/user/profile/**")
+                .pathsToMatch("/user/**", "/kaptcha/**", "/email/**", "/file/avatar/**", "/user-coupons/**")
                 .build();
     }
 
@@ -27,7 +27,7 @@ public class SwaggerConfig {
     public GroupedOpenApi productApi() {
         return GroupedOpenApi.builder()
                 .group("商品相关")
-                .pathsToMatch("/product/**", "/favorite/**", "/order/**", "/review/**", "/cart/**")
+                .pathsToMatch("/product/**", "/favorite/**", "/review/**", "/order/**", "/cart/**")
                 .build();
     }
 
@@ -36,7 +36,7 @@ public class SwaggerConfig {
         StringBuilder desc = new StringBuilder();
         desc.append("后台管理系统接口文档\n\n");
         desc.append("接口分组说明：\n");
-        desc.append("1. 用户相关：用户认证（登录、注册）、个人信息管理、地址管理、头像管理、验证码等接口\n");
+        desc.append("1. 用户相关：用户认证（登录、注册）、个人信息管理、地址管理、头像管理、验证码、优惠券等接口\n");
         desc.append("2. 商品相关：商品管理、收藏、订单、评价、购物车等接口\n");
         
         return new OpenAPI()
@@ -70,7 +70,8 @@ public class SwaggerConfig {
                             s.equals("/user/register") ||
                             s.equals("/email/captcha/send") ||
                             s.equals("/review/list") ||
-                            s.startsWith("/product")) {
+                            s.startsWith("/product/list") ||
+                            s.startsWith("/product/detail")) {
                         return;
                     }
                     // 接口添加鉴权参数

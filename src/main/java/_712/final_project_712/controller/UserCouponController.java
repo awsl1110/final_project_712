@@ -17,7 +17,7 @@ import java.util.List;
 
 @Tag(name = "用户优惠券接口", description = "用户优惠券接口")
 @RestController
-@RequestMapping("/api/user-coupons")
+@RequestMapping("/user-coupons")
 public class UserCouponController {
 
     @Autowired
