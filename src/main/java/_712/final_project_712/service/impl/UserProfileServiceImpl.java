@@ -111,19 +111,13 @@ public class UserProfileServiceImpl implements UserProfileService {
     @Override
     public UserDTO.UserInfoResponse getUserInfo(Long userId) {
         // 查询用户基本信息
-        User user = QueryChain.of(User.class)
-                .where(User::getId).eq(userId)
-                .one();
-                
+        User user = userMapper.selectOneById(userId);
         if (user == null) {
             throw new RuntimeException("用户不存在");
         }
         
-        // 查询用户的所有地址
-        List<UserAddress> addresses = QueryChain.of(UserAddress.class)
-                .where(UserAddress::getUserId).eq(userId)
-                .orderBy(UserAddress::getIsDefault, false)
-                .list();
+        // 使用新的方法查询用户的所有地址
+        List<UserAddress> addresses = addressMapper.getUserAddresses(userId);
         
         // 构建响应DTO
         UserDTO.UserInfoResponse response = new UserDTO.UserInfoResponse();
