@@ -9,19 +9,16 @@ import java.util.List;
 public class OrderDTO {
 
     @Data
-    @Schema(description = "订单查询参数")
-    public static class OrderQueryParams {
-        @Schema(description = "用户ID")
-        private Long userId;
+    @Schema(description = "创建订单请求")
+    public static class CreateOrderRequest {
+        @Schema(description = "购物车ID列表")
+        private List<Long> cartIds;
         
-        @Schema(description = "订单状态")
-        private Integer status;
+        @Schema(description = "收货地址ID")
+        private Long addressId;
         
-        @Schema(description = "页码")
-        private Integer pageNum = 1;
-        
-        @Schema(description = "每页数量")
-        private Integer pageSize = 10;
+        @Schema(description = "备注")
+        private String remark;
     }
 
     @Data
@@ -44,6 +41,12 @@ public class OrderDTO {
         
         @Schema(description = "订单状态:0-待付款,1-待发货,2-待收货,3-已完成,4-已取消")
         private Integer status;
+        
+        @Schema(description = "收货地址ID")
+        private Long addressId;
+        
+        @Schema(description = "备注")
+        private String remark;
         
         @Schema(description = "订单商品列表")
         private List<OrderItemInfo> items;
