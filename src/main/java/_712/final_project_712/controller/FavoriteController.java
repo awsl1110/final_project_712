@@ -9,10 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -38,5 +35,34 @@ public class FavoriteController {
             @RequestHeader("Authorization") String token) {
         Long userId = jwtUtil.getUserIdFromToken(token);
         return favoriteService.getFavoritesByUserId(userId);
+    }
+
+    @Operation(
+        summary = "删除收藏",
+        description = "根据收藏ID删除收藏记录",
+        security = @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
+    )
+    @DeleteMapping("/{favoriteId}")
+    public boolean deleteFavorite(
+            @Parameter(description = "用户认证token", required = true)
+            @RequestHeader("Authorization") String token,
+            @Parameter(description = "收藏ID", required = true)
+            @PathVariable Long favoriteId) {
+        return favoriteService.deleteFavorite(favoriteId);
+    }
+
+    @Operation(
+        summary = "添加收藏",
+        description = "添加商品到收藏列表",
+        security = @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
+    )
+    @PostMapping("/{productId}")
+    public boolean addFavorite(
+            @Parameter(description = "用户认证token", required = true)
+            @RequestHeader("Authorization") String token,
+            @Parameter(description = "商品ID", required = true)
+            @PathVariable Long productId) {
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        return favoriteService.addFavorite(userId, productId);
     }
 } 

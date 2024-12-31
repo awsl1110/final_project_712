@@ -2,7 +2,11 @@ package _712.final_project_712.service.impl;
 
 import _712.final_project_712.Exception.BusinessException;
 import _712.final_project_712.mapper.ProductReviewMapper;
+import _712.final_project_712.mapper.OrderMapper;
+import _712.final_project_712.mapper.OrderItemMapper;
 import _712.final_project_712.model.ProductReview;
+import _712.final_project_712.model.Orders;
+import _712.final_project_712.model.OrderItem;
 import _712.final_project_712.model.dto.ReviewQueryDTO;
 import _712.final_project_712.service.ProductReviewService;
 import com.mybatisflex.core.paginate.Page;
@@ -21,6 +25,12 @@ public class ProductReviewServiceImpl implements ProductReviewService {
 
     @Autowired
     private ProductReviewMapper reviewMapper;
+
+    @Autowired
+    private OrderMapper orderMapper;
+
+    @Autowired
+    private OrderItemMapper orderItemMapper;
 
     @Override
     public Page<ProductReview> getReviewList(ReviewQueryDTO queryDTO) {
@@ -89,32 +99,43 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     @Override
     @Transactional
     public boolean addReview(ProductReview review) {
-        // 参数校验
-        if (review.getProductId() == null) {
-            throw new BusinessException("商品ID不能为空");
-        }
-        if (review.getOrderId() == null) {
-            throw new BusinessException("订单ID不能为空");
-        }
-        if (review.getRating() == null || review.getRating() < 1 || review.getRating() > 5) {
-            throw new BusinessException("评分必须在1-5之间");
+        // 1. 校验订单是否存在
+        Orders order = orderMapper.selectOneById(review.getOrderId());
+        if (order == null) {
+            throw new BusinessException("无此订单");
         }
         
-        // 设置默认值
-        review.setCreateTime(LocalDateTime.now());
-        review.setUpdateTime(LocalDateTime.now());
-        review.setStatus(1); // 默认显示
+        // 2. 校验订单商品是否匹配
+        QueryWrapper queryWrapper = QueryWrapper.create()
+            .select("*")
+            .from("order_items")
+            .where("order_id = ?", review.getOrderId())
+            .and("product_id = ?", review.getProductId());
         
-        // 处理 content
+        OrderItem orderItem = orderItemMapper.selectOneByQuery(queryWrapper);
+        if (orderItem == null) {
+            throw new BusinessException("该订单中不包含此商品");
+        }
+        
+        // 3. 设置默认值
+        if (review.getStatus() == null) {
+            review.setStatus(1);  // 默认显示
+        }
+        
+        // 4. 设置时间
+        LocalDateTime now = LocalDateTime.now();
+        review.setCreateTime(now);
+        review.setUpdateTime(now);
+        
+        // 5. 处理评价内容
         if (review.getContent() == null) {
             review.setContent("");
         }
         
-        // 处理 images
+        // 6. 处理图片数据
         if (review.getImages() == null || review.getImages().trim().isEmpty()) {
-            review.setImages("[]"); // 设置为空JSON数组
+            review.setImages("[]");
         } else {
-            // 验证images是否是有效的JSON数组格式
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.readTree(review.getImages());
@@ -123,6 +144,7 @@ public class ProductReviewServiceImpl implements ProductReviewService {
             }
         }
         
+        // 7. 保存评价
         try {
             return reviewMapper.insert(review) > 0;
         } catch (Exception e) {
@@ -149,5 +171,19 @@ public class ProductReviewServiceImpl implements ProductReviewService {
     @Transactional
     public boolean deleteReview(Long reviewId) {
         return reviewMapper.deleteById(reviewId) > 0;
+    }
+
+    @Override
+    public ProductReview getReviewByOrderId(Long orderId) {
+        if (orderId == null) {
+            throw new BusinessException("订单ID不能为空");
+        }
+        
+        QueryWrapper queryWrapper = QueryWrapper.create()
+            .select("*")
+            .from("product_review")
+            .where("order_id = ?", orderId);
+            
+        return reviewMapper.selectOneByQuery(queryWrapper);
     }
 } 

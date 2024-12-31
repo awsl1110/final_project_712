@@ -5,4 +5,6 @@ import java.util.List;
 
 public interface FavoriteService {
     List<FavoriteDTO> getFavoritesByUserId(long userId);
+    boolean deleteFavorite(long favoriteId);
+    boolean addFavorite(long userId, long productId);
 } 

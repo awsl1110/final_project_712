@@ -3,21 +3,15 @@ package _712.final_project_712.service.impl;
 import _712.final_project_712.mapper.UserMapper;
 import _712.final_project_712.mapper.UserAddressMapper;
 import _712.final_project_712.model.User;
-import _712.final_project_712.model.UserAddress;
 import _712.final_project_712.service.UserService;
 import _712.final_project_712.util.JwtUtil;
 import com.mybatisflex.core.query.QueryChain;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.time.LocalDateTime;
-import java.util.stream.Collectors;
-import _712.final_project_712.model.dto.UpdateProfileRequest;
-import _712.final_project_712.model.dto.UserInfoResponse;
 
 @Service
 public class UserServiceImpl implements UserService {

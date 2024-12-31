@@ -1,10 +1,7 @@
 package _712.final_project_712.controller;
 
 import _712.final_project_712.model.Result;
-import _712.final_project_712.model.dto.AddAddressRequest;
-import _712.final_project_712.model.dto.UpdateUserRequest;
-import _712.final_project_712.model.dto.UserInfoResponse;
-import _712.final_project_712.model.dto.UpdateAddressRequest;
+import _712.final_project_712.model.dto.UserDTO;
 import _712.final_project_712.service.UserProfileService;
 import _712.final_project_712.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,7 +27,7 @@ public class UserProfileController {
     public Result<?> updateUserInfo(
             @Parameter(description = "用户token", required = true)
             @RequestHeader("Authorization") String token,
-            @RequestBody UpdateUserRequest request
+            @RequestBody UserDTO.UpdateUserRequest request
     ) {
         if (!StringUtils.hasText(token)) {
             return Result.error(401, "token不能为空");
@@ -55,7 +52,7 @@ public class UserProfileController {
     public Result<?> addAddress(
             @Parameter(description = "用户token", required = true)
             @RequestHeader("Authorization") String token,
-            @RequestBody AddAddressRequest request
+            @RequestBody UserDTO.AddAddressRequest request
     ) {
         if (!StringUtils.hasText(token)) {
             return Result.error(401, "token不能为空");
@@ -92,7 +89,7 @@ public class UserProfileController {
         Long userId = jwtUtil.getUserIdFromToken(token);
         
         try {
-            UserInfoResponse userInfo = userProfileService.getUserInfo(userId);
+            UserDTO.UserInfoResponse userInfo = userProfileService.getUserInfo(userId);
             return Result.success(userInfo);
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());
@@ -124,14 +121,14 @@ public class UserProfileController {
         }
     }
     
-    @Operation(summary = "修改收货地址", description = "修改用户的收货地址信息")
+    @Operation(summary = "修改收货地址", description = "修改用户的收货地址")
     @PutMapping("/address/{addressId}")
     public Result<?> updateAddress(
             @Parameter(description = "用户token", required = true)
             @RequestHeader("Authorization") String token,
             @Parameter(description = "地址ID", required = true)
             @PathVariable Long addressId,
-            @RequestBody UpdateAddressRequest request
+            @RequestBody UserDTO.UpdateAddressRequest request
     ) {
         if (!StringUtils.hasText(token)) {
             return Result.error(401, "token不能为空");
