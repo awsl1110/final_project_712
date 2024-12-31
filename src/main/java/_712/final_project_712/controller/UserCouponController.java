@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,15 +25,19 @@ public class UserCouponController {
 
     @Operation(summary = "获取当前用户的优惠券列表")
     @GetMapping
-    public ResponseEntity<List<UserCouponDTO>> getUserCoupons(
+    public Result<List<UserCouponDTO>> getUserCoupons(
             @Parameter(description = "用户token", required = true)
             @RequestHeader("Authorization") String token) {
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
+        try {
+            if (token != null && token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+            Long userId = jwtUtil.getUserIdFromToken(token);
+            List<UserCouponDTO> userCoupons = userCouponService.getUserCoupons(userId);
+            return Result.success(userCoupons);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
         }
-        Long userId = jwtUtil.getUserIdFromToken(token);
-        List<UserCouponDTO> userCoupons = userCouponService.getUserCoupons(userId);
-        return ResponseEntity.ok(userCoupons);
     }
 
     @Operation(summary = "领取优惠券")

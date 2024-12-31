@@ -1,21 +1,22 @@
 package _712.final_project_712.controller;
 
+import _712.final_project_712.model.Result;
 import _712.final_project_712.model.dto.FavoriteDTO;
 import _712.final_project_712.service.FavoriteService;
 import _712.final_project_712.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import org.springframework.http.HttpHeaders;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Tag(name = "收藏管理", description = "收藏相关接口")
 @RestController
-@RequestMapping("/favorite")
+@RequestMapping("/favorites")
 public class FavoriteController {
 
     @Autowired
@@ -26,15 +27,23 @@ public class FavoriteController {
 
     @Operation(
         summary = "获取收藏列表",
-        description = "获取当前登录用户的所有收藏商品列表，按收藏时间倒序排序",
+        description = "获取当前用户的收藏列表",
         security = @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
     )
-    @GetMapping("/list")
-    public List<FavoriteDTO> getFavorites(
+    @GetMapping
+    public Result<List<FavoriteDTO>> getFavorites(
             @Parameter(description = "用户认证token", required = true)
             @RequestHeader("Authorization") String token) {
-        Long userId = jwtUtil.getUserIdFromToken(token);
-        return favoriteService.getFavoritesByUserId(userId);
+        try {
+            if (token != null && token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+            Long userId = jwtUtil.getUserIdFromToken(token);
+            List<FavoriteDTO> favorites = favoriteService.getFavoritesByUserId(userId);
+            return Result.success(favorites);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @Operation(
@@ -43,12 +52,17 @@ public class FavoriteController {
         security = @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
     )
     @DeleteMapping("/{favoriteId}")
-    public boolean deleteFavorite(
+    public Result<Boolean> deleteFavorite(
             @Parameter(description = "用户认证token", required = true)
             @RequestHeader("Authorization") String token,
             @Parameter(description = "收藏ID", required = true)
             @PathVariable Long favoriteId) {
-        return favoriteService.deleteFavorite(favoriteId);
+        try {
+            boolean success = favoriteService.deleteFavorite(favoriteId);
+            return success ? Result.success(success) : Result.error("删除失败");
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @Operation(
@@ -57,12 +71,20 @@ public class FavoriteController {
         security = @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
     )
     @PostMapping("/{productId}")
-    public boolean addFavorite(
+    public Result<Boolean> addFavorite(
             @Parameter(description = "用户认证token", required = true)
             @RequestHeader("Authorization") String token,
             @Parameter(description = "商品ID", required = true)
             @PathVariable Long productId) {
-        Long userId = jwtUtil.getUserIdFromToken(token);
-        return favoriteService.addFavorite(userId, productId);
+        try {
+            if (token != null && token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+            Long userId = jwtUtil.getUserIdFromToken(token);
+            boolean success = favoriteService.addFavorite(userId, productId);
+            return success ? Result.success(success) : Result.error("收藏失败");
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
     }
 } 
