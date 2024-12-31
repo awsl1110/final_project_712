@@ -17,6 +17,14 @@ public interface OrderMapper extends BaseMapper<Orders> {
             "o.receiver_name, o.receiver_phone, o.address " +
             "FROM orders o " +
             "LEFT JOIN user u ON o.user_id = u.id " +
+            "WHERE o.user_id = #{userId} " +
+            "ORDER BY o.create_time DESC")
+    List<OrderDTO.OrderInfo> getUserOrders(Long userId);
+    
+    @Select("SELECT o.*, u.name as user_name, u.email as user_email, " +
+            "o.receiver_name, o.receiver_phone, o.address " +
+            "FROM orders o " +
+            "LEFT JOIN user u ON o.user_id = u.id " +
             "ORDER BY o.create_time DESC")
     List<OrderDTO.OrderInfo> getAllOrders();
     
