@@ -10,13 +10,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-@Tag(name = "商品分类查询", description = "商品相关接口")
+@Tag(name = "商品查询", description = "商品相关接口")
 @RestController
 @RequestMapping("/product")
 public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Operation(summary = "获取所有商品列表")
+    @GetMapping("/list")
+    public Result<List<ProductDTO>> getAllProducts() {
+        try {
+            List<ProductDTO> products = productService.getAllProducts();
+            return Result.success(products);
+        } catch (Exception e) {
+            return Result.error("获取商品列表失败：" + e.getMessage());
+        }
+    }
 
     @Operation(summary = "获取分类商品列表")
     @GetMapping("/category/{categoryId}")

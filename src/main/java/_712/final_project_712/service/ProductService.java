@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface ProductService {
     List<ProductDTO> getProductsByCategory(Long categoryId);
+    List<ProductDTO> getAllProducts();
 } 

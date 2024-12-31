@@ -68,7 +68,8 @@ public class SwaggerConfig {
                     if (s.startsWith("/kaptcha") || 
                         s.equals("/user/login") || 
                         s.equals("/user/register") ||
-                        s.equals("/email/captcha/send")) {
+                        s.equals("/email/captcha/send") ||
+                        s.startsWith("/product")) {
                         return;
                     }
                     // 接口添加鉴权参数

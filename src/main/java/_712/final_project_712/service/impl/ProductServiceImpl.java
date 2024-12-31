@@ -20,4 +20,9 @@ public class ProductServiceImpl implements ProductService {
         }
         return productMapper.findByCategoryId(categoryId);
     }
+
+    @Override
+    public List<ProductDTO> getAllProducts() {
+        return productMapper.findAllProducts();
+    }
 } 
