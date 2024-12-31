@@ -37,7 +37,7 @@ public class SwaggerConfig {
                         "/review/**",
                         "/order/**",
                         "/cart/**",
-                        "/supplier"
+                        "/supplier/**"
                 )
                 .build();
     }
