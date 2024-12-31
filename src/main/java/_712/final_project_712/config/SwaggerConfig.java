@@ -19,7 +19,12 @@ public class SwaggerConfig {
     public GroupedOpenApi userApi() {
         return GroupedOpenApi.builder()
                 .group("用户相关")
-                .pathsToMatch("/user/**", "/kaptcha/**", "/email/**", "/file/avatar/**", "/user-coupons/**")
+                .pathsToMatch("/user/**",
+                        "/kaptcha/**",
+                        "/email/**",
+                        "/file/avatar/**",
+                        "/user-coupons/**"
+                )
                 .build();
     }
 
@@ -27,7 +32,13 @@ public class SwaggerConfig {
     public GroupedOpenApi productApi() {
         return GroupedOpenApi.builder()
                 .group("商品相关")
-                .pathsToMatch("/product/**", "/favorite/**", "/review/**", "/order/**", "/cart/**")
+                .pathsToMatch("/product/**",
+                        "/favorites/**",
+                        "/review/**",
+                        "/order/**",
+                        "/cart/**",
+                        "/supplier"
+                )
                 .build();
     }
 
