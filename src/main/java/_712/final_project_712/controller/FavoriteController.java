@@ -1,6 +1,6 @@
 package _712.final_project_712.controller;
 
-import _712.final_project_712.model.Favorite;
+import _712.final_project_712.model.dto.FavoriteDTO;
 import _712.final_project_712.service.FavoriteService;
 import _712.final_project_712.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,7 +33,7 @@ public class FavoriteController {
         security = @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
     )
     @GetMapping("/list")
-    public List<Favorite> getFavorites(
+    public List<FavoriteDTO> getFavorites(
             @Parameter(description = "用户认证token", required = true)
             @RequestHeader("Authorization") String token) {
         Long userId = jwtUtil.getUserIdFromToken(token);

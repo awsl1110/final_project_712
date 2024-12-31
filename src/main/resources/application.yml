@@ -8,7 +8,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: db_admin
     password: 12345678
-    url: jdbc:mysql://192.168.1.102:3306/db_712?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8
+    url: jdbc:mysql://192.168.100.1:3306/db_712?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8
     hikari:
       pool-name: HikariCP
       idle-timeout: 600000
@@ -40,7 +40,7 @@ spring:
       console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
   data:
     redis:
-      host: 192.168.1.102
+      host: 192.168.100.1
       port: 6379
       username: user712
       password: password
