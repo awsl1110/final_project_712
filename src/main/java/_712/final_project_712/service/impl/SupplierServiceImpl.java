@@ -122,6 +122,11 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+    public SupplierDTO.SupplierDetailResponse getSupplierDetail(Long supplierId) {
+        return supplierMapper.getSupplierDetail(supplierId);
+    }
+
+    @Override
     @Transactional
     public void updateSupplierStatus(Long supplierId, Integer status) {
         // 检查供应商是否存在

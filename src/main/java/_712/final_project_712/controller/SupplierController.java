@@ -55,13 +55,25 @@ public class SupplierController {
         }
     }
 
-    @Operation(summary = "获取供应商详情")
+    @Operation(summary = "获取供应商基本信息")
     @GetMapping("/{supplierId}")
     public Result<Supplier> getSupplierById(
             @Parameter(description = "供应商ID", required = true) @PathVariable Long supplierId) {
         try {
             Supplier supplier = supplierService.getSupplierById(supplierId);
             return Result.success(supplier);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @Operation(summary = "获取供应商详情（包含商品信息）")
+    @GetMapping("/{supplierId}/detail")
+    public Result<SupplierDTO.SupplierDetailResponse> getSupplierDetail(
+            @Parameter(description = "供应商ID", required = true) @PathVariable Long supplierId) {
+        try {
+            SupplierDTO.SupplierDetailResponse detail = supplierService.getSupplierDetail(supplierId);
+            return Result.success(detail);
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }

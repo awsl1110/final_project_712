@@ -26,6 +26,11 @@ public interface SupplierService {
     Supplier getSupplierById(Long supplierId);
 
     /**
+     * 获取供应商详情（包含商品信息）
+     */
+    SupplierDTO.SupplierDetailResponse getSupplierDetail(Long supplierId);
+
+    /**
      * 启用/禁用供应商
      */
     void updateSupplierStatus(Long supplierId, Integer status);
