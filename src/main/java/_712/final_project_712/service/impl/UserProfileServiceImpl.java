@@ -4,10 +4,7 @@ import _712.final_project_712.mapper.UserMapper;
 import _712.final_project_712.mapper.UserAddressMapper;
 import _712.final_project_712.model.User;
 import _712.final_project_712.model.UserAddress;
-import _712.final_project_712.model.dto.AddAddressRequest;
-import _712.final_project_712.model.dto.UpdateUserRequest;
-import _712.final_project_712.model.dto.UserInfoResponse;
-import _712.final_project_712.model.dto.UpdateAddressRequest;
+import _712.final_project_712.model.dto.UserDTO;
 import _712.final_project_712.service.UserProfileService;
 import com.mybatisflex.core.query.QueryChain;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +30,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     @Transactional
-    public void updateUserInfo(Long userId, UpdateUserRequest request) {
+    public void updateUserInfo(Long userId, UserDTO.UpdateUserRequest request) {
         User user = QueryChain.of(User.class)
                 .where(User::getId).eq(userId)
                 .one();
@@ -69,7 +66,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     @Transactional
-    public void addAddress(Long userId, AddAddressRequest request) {
+    public void addAddress(Long userId, UserDTO.AddAddressRequest request) {
         // 验证地址信息完整性
         if (!StringUtils.hasText(request.getReceiverName())) {
             throw new RuntimeException("收货人姓名不能为空");
@@ -112,7 +109,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     }
 
     @Override
-    public UserInfoResponse getUserInfo(Long userId) {
+    public UserDTO.UserInfoResponse getUserInfo(Long userId) {
         // 查询用户基本信息
         User user = QueryChain.of(User.class)
                 .where(User::getId).eq(userId)
@@ -129,15 +126,15 @@ public class UserProfileServiceImpl implements UserProfileService {
                 .list();
         
         // 构建响应DTO
-        UserInfoResponse response = new UserInfoResponse();
+        UserDTO.UserInfoResponse response = new UserDTO.UserInfoResponse();
         response.setId(user.getId());
         response.setName(user.getName());
         response.setEmail(user.getEmail());
         
         // 转换地址信息
-        List<UserInfoResponse.AddressInfo> addressInfos = addresses.stream()
+        List<UserDTO.AddressInfo> addressInfos = addresses.stream()
                 .map(addr -> {
-                    UserInfoResponse.AddressInfo info = new UserInfoResponse.AddressInfo();
+                    UserDTO.AddressInfo info = new UserDTO.AddressInfo();
                     info.setId(addr.getId());
                     info.setReceiverName(addr.getReceiverName());
                     info.setReceiverPhone(addr.getReceiverPhone());
@@ -174,7 +171,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     @Transactional
-    public void updateAddress(Long userId, Long addressId, UpdateAddressRequest request) {
+    public void updateAddress(Long userId, Long addressId, UserDTO.UpdateAddressRequest request) {
         // 查询地址是否存在且属于该用户
         UserAddress address = QueryChain.of(UserAddress.class)
                 .where(UserAddress::getId).eq(addressId)
