@@ -38,17 +38,17 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDTO.OrderInfo getOrderDetail(Long orderId) {
-        // 获取订单基本信息(包含用户信息)
-        OrderDTO.OrderInfo order = orderMapper.getOrderWithUser(orderId);
-        if (order == null) {
+        // 获取订单基本信息和用户信息
+        OrderDTO.OrderInfo orderInfo = orderMapper.getOrderWithUser(orderId);
+        if (orderInfo == null) {
             throw new BusinessException("订单不存在");
         }
         
         // 获取订单商品信息
         List<OrderDTO.OrderItemInfo> items = orderMapper.getOrderItems(orderId);
-        order.setItems(items);
+        orderInfo.setItems(items);
         
-        return order;
+        return orderInfo;
     }
 
     @Override
