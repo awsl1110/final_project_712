@@ -1,12 +1,12 @@
 package _712.final_project_712.service;
 
 import _712.final_project_712.model.Orders;
-import _712.final_project_712.model.dto.OrderQueryDTO;
-import com.mybatisflex.core.paginate.Page;
+import _712.final_project_712.model.dto.OrderDTO;
+import java.util.List;
 
 public interface OrderService {
-    Page<Orders> getOrderList(OrderQueryDTO queryDTO);
-    Orders getOrderDetail(Long orderId);
+    List<OrderDTO.OrderInfo> getAllOrders();
+    OrderDTO.OrderInfo getOrderDetail(Long orderId);
     boolean updateOrderStatus(Long orderId, Integer status);
     boolean deleteOrder(Long orderId);
 } 
