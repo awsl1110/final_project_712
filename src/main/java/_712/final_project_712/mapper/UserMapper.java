@@ -2,11 +2,14 @@ package _712.final_project_712.mapper;
 
 import _712.final_project_712.model.User;
 import _712.final_project_712.model.UserAddress;
+import _712.final_project_712.model.dto.UserDTO;
 import com.mybatisflex.core.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Result;
+import org.apache.ibatis.annotations.Many;
+import java.util.List;
 
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
@@ -34,4 +37,23 @@ public interface UserMapper extends BaseMapper<User> {
         @Result(property = "defaultAddress.isDefault", column = "is_default")
     })
     User getUserWithDefaultAddress(Long userId);
+
+    /**
+     * 获取用户完整信息（包含所有地址）
+     */
+    @Select("SELECT id, name, email FROM user WHERE id = #{userId}")
+    @Results({
+        @Result(property = "id", column = "id"),
+        @Result(property = "name", column = "name"),
+        @Result(property = "email", column = "email"),
+        @Result(property = "addresses", column = "id",
+            many = @Many(select = "getAllUserAddresses"))
+    })
+    UserDTO.UserInfoResponse getUserFullInfo(Long userId);
+
+    /**
+     * 获取用户的所有地址
+     */
+    @Select("SELECT * FROM user_address WHERE user_id = #{userId} ORDER BY is_default DESC")
+    List<UserDTO.AddressInfo> getAllUserAddresses(Long userId);
 } 
