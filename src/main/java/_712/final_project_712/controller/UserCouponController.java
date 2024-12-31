@@ -3,15 +3,13 @@ package _712.final_project_712.controller;
 import _712.final_project_712.model.dto.UserCouponDTO;
 import _712.final_project_712.service.UserCouponService;
 import _712.final_project_712.util.JwtUtil;
+import _712.final_project_712.model.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -37,5 +35,24 @@ public class UserCouponController {
         Long userId = jwtUtil.getUserIdFromToken(token);
         List<UserCouponDTO> userCoupons = userCouponService.getUserCoupons(userId);
         return ResponseEntity.ok(userCoupons);
+    }
+
+    @Operation(summary = "领取优惠券")
+    @PostMapping("/{couponId}")
+    public Result<?> receiveCoupon(
+            @Parameter(description = "用户token", required = true)
+            @RequestHeader("Authorization") String token,
+            @Parameter(description = "优惠券ID", required = true)
+            @PathVariable Long couponId) {
+        try {
+            if (token != null && token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+            Long userId = jwtUtil.getUserIdFromToken(token);
+            boolean success = userCouponService.receiveCoupon(userId, couponId);
+            return success ? Result.success("领取成功") : Result.error("领取失败");
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
     }
 } 

@@ -1,8 +1,10 @@
 package _712.final_project_712.mapper;
 
 import _712.final_project_712.model.dto.UserCouponDTO;
+import _712.final_project_712.model.UserCoupon;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Insert;
 import java.util.List;
 
 @Mapper
@@ -19,4 +21,11 @@ public interface UserCouponMapper {
            "LEFT JOIN coupon c ON uc.coupon_id = c.id " +
            "WHERE uc.user_id = #{userId}")
     List<UserCouponDTO> findByUserId(Long userId);
+    
+    @Select("SELECT COUNT(*) > 0 FROM user_coupon WHERE user_id = #{userId} AND coupon_id = #{couponId}")
+    boolean checkUserCouponExists(Long userId, Long couponId);
+    
+    @Insert("INSERT INTO user_coupon (user_id, coupon_id, status, create_time) " +
+            "VALUES (#{userId}, #{couponId}, #{status}, #{createTime})")
+    int insert(UserCoupon userCoupon);
 } 
