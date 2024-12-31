@@ -28,4 +28,8 @@ public class CartItem {
     
     @Column("update_time")
     private LocalDateTime updateTime;
+    
+    // 非数据库字段，用于显示商品名称
+    @Column(ignore = true)
+    private String productName;
 }
