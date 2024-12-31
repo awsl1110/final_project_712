@@ -18,8 +18,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 
-import static _712.final_project_712.model.table.ProductReviewTableDef.PRODUCT_REVIEW;
-
 @Service
 public class ProductReviewServiceImpl implements ProductReviewService {
 
