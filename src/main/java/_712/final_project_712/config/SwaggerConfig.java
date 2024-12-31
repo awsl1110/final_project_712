@@ -16,17 +16,29 @@ import org.springframework.http.HttpHeaders;
 public class SwaggerConfig {
 
     @Bean
-    public GroupedOpenApi publicApi() {
+    public GroupedOpenApi userApi() {
         return GroupedOpenApi.builder()
-                .group("public")
-                .pathsToMatch("/**")
+                .group("用户相关")
+                .pathsToMatch("/user/**", "/kaptcha/**", "/email/**", "/file/avatar/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi productApi() {
+        return GroupedOpenApi.builder()
+                .group("商品相关")
+                .pathsToMatch("/product/**", "/favorite/**", "/order/**", "/review/**")
                 .build();
     }
 
     @Bean
     public OpenAPI openAPI() {
         StringBuilder desc = new StringBuilder();
-        desc.append("后台管理系统接口文档");
+        desc.append("后台管理系统接口文档\n\n");
+        desc.append("接口分组说明：\n");
+        desc.append("1. 用户相关：用户认证（登录、注册）、个人信息管理、地址管理、头像管理等接口\n");
+        desc.append("2. 商品相关：商品管理、收藏、订单、评价等接口\n");
+        
         return new OpenAPI()
                 .info(new Info()
                         .title("后台管理系统 - 接口文档")
