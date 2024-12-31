@@ -1,6 +1,5 @@
 package _712.final_project_712.service;
 
-import _712.final_project_712.model.LoginResult;
 import _712.final_project_712.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,69 +20,68 @@ public class UserLoginTest {
 
     @BeforeEach
     void setUp() {
-        // 准备测试数据
+        // 创建测试用户
         testUser = new User();
-        testUser.setId(1000L);
         testUser.setName("testUser");
         testUser.setPassword("password123");
         testUser.setEmail("test@example.com");
         
-        // 确保测试用户存在于数据库中
+        // 注册测试用户
         userService.register(testUser);
-        System.out.println("测试用户创建成功: " + testUser);
     }
 
     @Test
     void testSuccessfulLogin() {
         // 测试正确的用户名和密码
-        LoginResult result = userService.login("testUser", "password123");
-        System.out.println("成功登录测试结果: " + result);
+        String token = userService.login("testUser", "password123");
         
-        assertNotNull(result, "登录结果不应为空");
-        assertTrue(result.isSuccess(), "登录应该成功");
-        assertNotNull(result.getToken(), "登录成功应返回token");
-        assertEquals("登录成功", result.getMessage());
+        // 验证返回的token不为空
+        assertNotNull(token);
+        assertTrue(token.length() > 0);
+        System.out.println("登录成功，获取到token: " + token);
     }
 
     @Test
     void testLoginWithWrongPassword() {
         // 测试错误的密码
-        LoginResult result = userService.login("testUser", "wrongPassword");
-        System.out.println("错误密码测试结果: " + result);
-        
-        assertNotNull(result, "登录结果不应为空");
-        assertFalse(result.isSuccess());
-        assertNull(result.getToken());
-        assertEquals("密码错误", result.getMessage());
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userService.login("testUser", "wrongpassword");
+        });
+        assertEquals("密码错误", exception.getMessage());
+        System.out.println("密码错误测试通过");
     }
 
     @Test
     void testLoginWithNonexistentUser() {
         // 测试不存在的用户
-        LoginResult result = userService.login("nonexistentUser", "password123");
-        System.out.println("不存在用户测试结果: " + result);
-        
-        assertNotNull(result);
-        assertFalse(result.isSuccess());
-        assertNull(result.getToken());
-        assertEquals("用户不存在", result.getMessage());
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userService.login("nonexistentUser", "password123");
+        });
+        assertEquals("用户不存在", exception.getMessage());
+        System.out.println("用户不存在测试通过");
     }
 
     @Test
-    void testLoginWithInvalidInput() {
+    void testLoginWithEmptyCredentials() {
         // 测试空用户名
-        LoginResult result1 = userService.login("", "password123");
-        System.out.println("空用户名测试结果: " + result1);
-        assertEquals("用户名不能为空", result1.getMessage());
+        Exception exception1 = assertThrows(RuntimeException.class, () -> {
+            userService.login("", "password123");
+        });
+        assertEquals("用户名不能为空", exception1.getMessage());
+        System.out.println("空用户名测试通过");
 
         // 测试空密码
-        LoginResult result2 = userService.login("testUser", "");
-        System.out.println("空密码测试结果: " + result2);
-        assertEquals("密码不能为空", result2.getMessage());
+        Exception exception2 = assertThrows(RuntimeException.class, () -> {
+            userService.login("testUser", "");
+        });
+        assertEquals("密码不能为空", exception2.getMessage());
+        System.out.println("空密码测试通过");
 
         // 测试null值
-        LoginResult result3 = userService.login(null, null);
-        System.out.println("null值测试结果: " + result3);
-        assertEquals("用户名不能为空", result3.getMessage());
+        Exception exception3 = assertThrows(RuntimeException.class, () -> {
+            userService.login(null, null);
+        });
+        assertEquals("用户名不能为空", exception3.getMessage());
+        System.out.println("null值测试通过");
     }
 } 

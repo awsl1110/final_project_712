@@ -1,23 +1,19 @@
 <template>
   <div class="register-container">
-    <el-card class="register-card">
-      <template #header>
-        <div class="card-header">
-          <span>用户注册</span>
-        </div>
-      </template>
+    <el-card class="register-box">
+      <h3 class="mb-4 text-center">用户注册</h3>
       
-      <el-form ref="formRef" :model="registerForm" :rules="rules">
+      <el-form ref="formRef" :model="registerForm" :rules="rules" label-position="top">
         <el-form-item prop="username">
-          <el-input v-model="registerForm.username" placeholder="用户名">
+          <el-input v-model="registerForm.username" placeholder="请输入用户名">
             <template #prefix>
               <el-icon><User /></el-icon>
             </template>
           </el-input>
         </el-form-item>
         
-        <el-form-item prop="password">
-          <el-input v-model="registerForm.password" type="password" placeholder="密码">
+        <el-form-item prop="password" class="mb-2">
+          <el-input v-model="registerForm.password" type="password" placeholder="请输入密码">
             <template #prefix>
               <el-icon><Lock /></el-icon>
             </template>
@@ -25,7 +21,7 @@
         </el-form-item>
 
         <el-form-item prop="email">
-          <el-input v-model="registerForm.email" placeholder="邮箱">
+          <el-input v-model="registerForm.email" placeholder="请输入邮箱">
             <template #prefix>
               <el-icon><Message /></el-icon>
             </template>
@@ -33,12 +29,15 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" :loading="loading" @click="handleRegister" block>
+          <el-button type="primary" :loading="loading" @click="handleRegister" class="register-button">
             注册
           </el-button>
-          <el-link type="primary" @click="router.push('/login')" class="login-link">
-            已有账号？去登录
-          </el-link>
+          <div class="text-center mt-3">
+            已有账号？
+            <el-link type="primary" @click="router.push('/login')">
+              去登录
+            </el-link>
+          </div>
         </el-form-item>
       </el-form>
     </el-card>
@@ -108,21 +107,13 @@ const handleRegister = async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f5f5f5;
+  background-color: var(--el-fill-color-light);
   
-  .register-card {
+  .register-box {
     width: 400px;
-    
-    .card-header {
-      text-align: center;
-      font-size: 20px;
-    }
-
-    .login-link {
-      display: block;
-      text-align: center;
-      margin-top: 12px;
-    }
   }
+  .register-button {
+  width: 100%;
+}
 }
 </style> 
