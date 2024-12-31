@@ -8,22 +8,24 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@Table("product")
-public class Product {
+@Table("cart")
+public class CartItem {
     @Id
     private Long id;
     
-    private String name;
+    @Column("user_id")
+    private Long userId;
     
-    private Double price;
+    @Column("product_id")
+    private Long productId;
     
-    private String description;
+    private Integer quantity;
     
-    private Integer stock;
+    private Integer selected;
     
     @Column("create_time")
     private LocalDateTime createTime;
     
     @Column("update_time")
     private LocalDateTime updateTime;
-} 
+}
