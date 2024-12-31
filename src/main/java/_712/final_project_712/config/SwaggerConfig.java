@@ -65,11 +65,12 @@ public class SwaggerConfig {
             if (openApi.getPaths() != null) {
                 openApi.getPaths().forEach((s, pathItem) -> {
                     // 登录接口/验证码/注册等不需要添加鉴权参数
-                    if (s.startsWith("/kaptcha") || 
-                        s.equals("/user/login") || 
-                        s.equals("/user/register") ||
-                        s.equals("/email/captcha/send") ||
-                        s.startsWith("/product")) {
+                    if (s.startsWith("/kaptcha") ||
+                            s.equals("/user/login") ||
+                            s.equals("/user/register") ||
+                            s.equals("/email/captcha/send") ||
+                            s.equals("/review/list") ||
+                            s.startsWith("/product")) {
                         return;
                     }
                     // 接口添加鉴权参数
