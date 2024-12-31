@@ -11,6 +11,9 @@ public interface ProductReviewService {
     // 获取评价详情
     ProductReview getReviewDetail(Long reviewId);
     
+    // 获取订单评价
+    ProductReview getReviewByOrderId(Long orderId);
+    
     // 添加评价
     boolean addReview(ProductReview review);
     

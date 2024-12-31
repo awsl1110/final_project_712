@@ -15,7 +15,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
-                .addPathPatterns("/file/**", "/favorite/**")
+                .addPathPatterns("/file/**", "/favorite/**", "/order/**", "/review/**")
                 .excludePathPatterns(
                         "/file/avatar/*/view/**",
                         "/kaptcha/**",
@@ -24,7 +24,9 @@ public class WebConfig implements WebMvcConfigurer {
                         "/email/captcha/**",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
-                        "/product/**"
+                        "/product/**",
+                        "/review/list",
+                        "/review/*/detail"
                 );
     }
 }

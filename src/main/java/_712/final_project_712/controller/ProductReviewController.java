@@ -4,15 +4,21 @@ import _712.final_project_712.Exception.BusinessException;
 import _712.final_project_712.model.ProductReview;
 import _712.final_project_712.model.Result;
 import _712.final_project_712.model.dto.ReviewQueryDTO;
+import _712.final_project_712.service.FileService;
 import _712.final_project_712.service.ProductReviewService;
+import _712.final_project_712.util.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
 
 @Tag(name = "商品评价管理", description = "商品评价相关接口")
 @RestController
@@ -22,32 +28,46 @@ public class ProductReviewController {
     @Autowired
     private ProductReviewService reviewService;
 
-    @Operation(summary = "获取评价列表")
-    @GetMapping("/list")
-    public Result<Page<ProductReview>> getReviewList(ReviewQueryDTO queryDTO) {
-        try {
-            Page<ProductReview> page = reviewService.getReviewList(queryDTO);
-            return Result.success(page);
-        } catch (BusinessException e) {
-            return Result.error(e.getMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Result.error("获取评价列表失败");
-        }
-    }
+    @Autowired
+    private JwtUtil jwtUtil;
 
-    @Operation(summary = "获取评价详情")
-    @GetMapping("/{reviewId}")
+    @Autowired
+    private FileService fileService;
+
+    @Operation(summary = "获取订单评价详情")
+    @GetMapping("/{orderId}")
     public Result<ProductReview> getReviewDetail(
-            @Parameter(description = "评价ID") @PathVariable Long reviewId) {
+            @Parameter(description = "订单ID") @PathVariable Long orderId) {
         try {
-            ProductReview review = reviewService.getReviewDetail(reviewId);
+            ProductReview review = reviewService.getReviewByOrderId(orderId);
             if (review == null) {
-                return Result.error("无评价信息");
+                return Result.error("该订单暂无评价信息");
             }
             return Result.success(review);
         } catch (Exception e) {
             return Result.error("获取评价详情失败：" + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "获取商品评价列表")
+    @GetMapping("/list")
+    public Result<Page<ProductReview>> getReviewList(
+            @Parameter(description = "商品ID", required = true) @RequestParam Long productId) {
+        try {
+            ReviewQueryDTO queryDTO = new ReviewQueryDTO();
+            queryDTO.setProductId(productId);
+            queryDTO.setStatus(1); // 只查询显示状态的评价
+            
+            Page<ProductReview> page = reviewService.getReviewList(queryDTO);
+            
+            // 检查是否有评价数据
+            if (page.getRecords().isEmpty()) {
+                return Result.error("此商品无评价");
+            }
+            
+            return Result.success(page);
+        } catch (Exception e) {
+            return Result.error("获取商品评价列表失败：" + e.getMessage());
         }
     }
 
@@ -56,22 +76,34 @@ public class ProductReviewController {
     public Result<?> addReview(
             @Parameter(description = "订单ID") @PathVariable Long orderId,
             @Parameter(description = "商品ID") @PathVariable Long productId,
-            @RequestBody ProductReview review) {
-        // 基础参数校验
-        if (review == null) {
-            return Result.error("评价信息不能为空");
-        }
-        
-        // 设置订单ID和商品ID
-        review.setOrderId(orderId);
-        review.setProductId(productId);
-        
-        // 评分校验
-        if (review.getRating() == null || review.getRating() < 1 || review.getRating() > 5) {
-            return Result.error("评分必须在1-5之间");
-        }
-        
+            @Parameter(description = "评分") @RequestParam Integer rating,
+            @Parameter(description = "评价内容") @RequestParam String content,
+            @Parameter(description = "评价图片") @RequestParam(value = "file", required = false) MultipartFile[] files,
+            @RequestHeader("Authorization") String token) {
         try {
+            Long userId = jwtUtil.getUserIdFromToken(token);
+            
+            ProductReview review = new ProductReview();
+            review.setUserId(userId);
+            review.setOrderId(orderId);
+            review.setProductId(productId);
+            review.setRating(rating);
+            review.setContent(content);
+            
+            // 处理图片上传
+            if (files != null && files.length > 0) {
+                List<String> imageUrls = new ArrayList<>();
+                for (MultipartFile file : files) {
+                    // 使用现有的文件上传服务保存图片
+                    String url = fileService.saveAvatar(file, userId);
+                    imageUrls.add(url);
+                }
+                // 将图片URL列表转换为JSON数组字符串
+                review.setImages(new ObjectMapper().writeValueAsString(imageUrls));
+            } else {
+                review.setImages("[]");
+            }
+            
             boolean success = reviewService.addReview(review);
             return success ? Result.success() : Result.error("添加失败");
         } catch (BusinessException e) {
