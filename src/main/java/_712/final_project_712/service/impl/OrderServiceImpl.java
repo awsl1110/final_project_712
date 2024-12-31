@@ -3,17 +3,14 @@ package _712.final_project_712.service.impl;
 import _712.final_project_712.Exception.BusinessException;
 import _712.final_project_712.mapper.OrderMapper;
 import _712.final_project_712.model.Orders;
-import _712.final_project_712.model.dto.OrderQueryDTO;
+import _712.final_project_712.model.dto.OrderDTO;
 import _712.final_project_712.service.OrderService;
-import com.mybatisflex.core.paginate.Page;
-import com.mybatisflex.core.query.QueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-
-import static _712.final_project_712.model.table.OrdersTableDef.ORDERS;
+import java.util.List;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -22,32 +19,36 @@ public class OrderServiceImpl implements OrderService {
     private OrderMapper orderMapper;
 
     @Override
-    public Page<Orders> getOrderList(OrderQueryDTO queryDTO) {
-        // 确保分页参数有效
-        if (queryDTO.getPageNum() == null || queryDTO.getPageNum() < 1) {
-            queryDTO.setPageNum(1);
-        }
-        if (queryDTO.getPageSize() == null || queryDTO.getPageSize() < 1) {
-            queryDTO.setPageSize(10);
-        }
-
+    public List<OrderDTO.OrderInfo> getAllOrders() {
         try {
-            QueryWrapper queryWrapper = QueryWrapper.create()
-                .select("*")
-                .from("orders")
-                .orderBy("create_time desc");
-
-            System.out.println("Generated SQL: " + queryWrapper.toSQL());
-            return orderMapper.paginate(queryDTO.getPageNum(), queryDTO.getPageSize(), queryWrapper);
+            // 获取所有订单
+            List<OrderDTO.OrderInfo> orders = orderMapper.getAllOrders();
+            
+            // 获取每个订单的商品信息
+            for (OrderDTO.OrderInfo order : orders) {
+                List<OrderDTO.OrderItemInfo> items = orderMapper.getOrderItems(order.getId());
+                order.setItems(items);
+            }
+            
+            return orders;
         } catch (Exception e) {
-            e.printStackTrace();
             throw new BusinessException("获取订单列表失败：" + e.getMessage());
         }
     }
 
     @Override
-    public Orders getOrderDetail(Long orderId) {
-        return orderMapper.selectOneById(orderId);
+    public OrderDTO.OrderInfo getOrderDetail(Long orderId) {
+        // 获取订单基本信息(包含用户信息)
+        OrderDTO.OrderInfo order = orderMapper.getOrderWithUser(orderId);
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+        
+        // 获取订单商品信息
+        List<OrderDTO.OrderItemInfo> items = orderMapper.getOrderItems(orderId);
+        order.setItems(items);
+        
+        return order;
     }
 
     @Override

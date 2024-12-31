@@ -1,6 +1,7 @@
 package _712.final_project_712.service.impl;
 
 import _712.final_project_712.mapper.UserMapper;
+import _712.final_project_712.mapper.UserAddressMapper;
 import _712.final_project_712.model.User;
 import _712.final_project_712.service.UserService;
 import _712.final_project_712.util.JwtUtil;
@@ -17,6 +18,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private UserAddressMapper addressMapper;
 
     @Autowired
     private JwtUtil jwtUtil;

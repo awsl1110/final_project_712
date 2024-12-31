@@ -2,23 +2,18 @@ package _712.final_project_712.controller;
 
 import _712.final_project_712.mapper.OrderMapper;
 import _712.final_project_712.model.Orders;
-import _712.final_project_712.model.dto.OrderQueryDTO;
 import _712.final_project_712.service.OrderService;
-import com.mybatisflex.core.paginate.Page;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -61,22 +56,6 @@ public class OrderControllerTest {
         orderMapper.insert(testOrder);
     }
 
-    @Test
-    void testGetOrderList() throws Exception {
-        // 创建查询条件
-        OrderQueryDTO queryDTO = new OrderQueryDTO();
-        queryDTO.setPageNum(1);
-        queryDTO.setPageSize(10);
-        queryDTO.setStatus(0);
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/order/list")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(queryDTO)))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data").exists());
-    }
 
     @Test
     void testGetOrderDetail() throws Exception {
@@ -96,20 +75,6 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$.code").value(200));
     }
 
-    @Test
-    void testGetOrderListWithInvalidParams() throws Exception {
-        // 测试无效的分页参数
-        OrderQueryDTO queryDTO = new OrderQueryDTO();
-        queryDTO.setPageNum(-1);
-        queryDTO.setPageSize(0);
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/order/list")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(queryDTO)))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
-    }
 
     @Test
     void testUpdateOrderStatusWithInvalidStatus() throws Exception {

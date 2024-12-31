@@ -1,6 +1,7 @@
 package _712.final_project_712.controller;
 
 import _712.final_project_712.model.Avatar;
+import _712.final_project_712.model.Result;
 import _712.final_project_712.service.FileService;
 import com.mybatisflex.core.query.QueryChain;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,7 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,24 +40,24 @@ public class FileController {
         description = "上传用户头像，需要Token认证",
         security = @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
     )
-    public ResponseEntity<String> uploadAvatar(
+    public Result<String> uploadAvatar(
             @RequestParam("file") MultipartFile file,
             HttpServletRequest request) {
         try {
             Long userId = (Long) request.getAttribute("userId");
             if (userId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("未登录或token无效");
+                return Result.error(401, "未登录或token无效");
             }
             
             if (file == null || file.isEmpty()) {
-                return ResponseEntity.badRequest().body("请选择要上传的文件");
+                return Result.error(400, "请选择要上传的文件");
             }
             
             String fileUrl = fileService.saveAvatar(file, userId);
-            return ResponseEntity.ok(fileUrl);
+            return Result.success(fileUrl);
         } catch (Exception e) {
             log.error("头像上传失败", e);
-            return ResponseEntity.badRequest().body("头像上传失败：" + e.getMessage());
+            return Result.error(500, "头像上传失败：" + e.getMessage());
         }
     }
 

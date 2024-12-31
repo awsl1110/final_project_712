@@ -4,18 +4,32 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
     
-    // 使用更安全的密钥生成方式
-    private final SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+    @Value("${jwt.secret:your-256-bit-secret-key-your-256-bit-secret-key}")
+    private String secret;
+    
+    private SecretKey key;
     
     // token过期时间：1小时
     private final long expiration = 3600000;
+    
+    /**
+     * 初始化密钥
+     */
+    private SecretKey getKey() {
+        if (key == null) {
+            key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        }
+        return key;
+    }
     
     /**
      * 生成JWT token
@@ -32,7 +46,7 @@ public class JwtUtil {
                 .claim("username", username)         // 添加用户名到claims
                 .setIssuedAt(now)                   // 设置签发时间
                 .setExpiration(expiryDate)          // 设置过期时间
-                .signWith(key)                      // 使用密钥签名
+                .signWith(getKey())                 // 使用密钥签名
                 .compact();                         // 生成token字符串
     }
     
@@ -43,7 +57,7 @@ public class JwtUtil {
      */
     public Claims parseToken(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(getKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -57,7 +71,7 @@ public class JwtUtil {
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
-                    .setSigningKey(key)
+                    .setSigningKey(getKey())
                     .build()
                     .parseClaimsJws(token);
             return true;

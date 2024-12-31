@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpSession;
 import java.util.HashMap;
+import org.springframework.util.StringUtils;
 
 @Tag(name = "用户管理", description = "用户相关接口")
 @RestController
@@ -118,10 +119,6 @@ public class UserController {
             // 验证邮箱验证码
             String key = "email:captcha:" + email;
             String correctCode = redisTemplate.opsForValue().get(key);
-            System.out.println("Email: " + email);
-            System.out.println("Redis key: " + key);
-            System.out.println("Stored code: " + correctCode);
-            System.out.println("Input code: " + emailCode);
             
             if (correctCode == null) {
                 return Result.error("验证码已过期");
