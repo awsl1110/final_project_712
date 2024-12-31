@@ -110,40 +110,12 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     public UserDTO.UserInfoResponse getUserInfo(Long userId) {
-        // 查询用户基本信息
-        User user = userMapper.selectOneById(userId);
-        if (user == null) {
+        // 使用关联查询获取用户完整信息
+        UserDTO.UserInfoResponse userInfo = userMapper.getUserFullInfo(userId);
+        if (userInfo == null) {
             throw new RuntimeException("用户不存在");
         }
-        
-        // 使用新的方法查询用户的所有地址
-        List<UserAddress> addresses = addressMapper.getUserAddresses(userId);
-        
-        // 构建响应DTO
-        UserDTO.UserInfoResponse response = new UserDTO.UserInfoResponse();
-        response.setId(user.getId());
-        response.setName(user.getName());
-        response.setEmail(user.getEmail());
-        
-        // 转换地址信息
-        List<UserDTO.AddressInfo> addressInfos = addresses.stream()
-                .map(addr -> {
-                    UserDTO.AddressInfo info = new UserDTO.AddressInfo();
-                    info.setId(addr.getId());
-                    info.setReceiverName(addr.getReceiverName());
-                    info.setReceiverPhone(addr.getReceiverPhone());
-                    info.setProvince(addr.getProvince());
-                    info.setCity(addr.getCity());
-                    info.setDistrict(addr.getDistrict());
-                    info.setDetailAddress(addr.getDetailAddress());
-                    info.setIsDefault(addr.getIsDefault());
-                    return info;
-                })
-                .collect(Collectors.toList());
-                
-        response.setAddresses(addressInfos);
-        
-        return response;
+        return userInfo;
     }
 
     @Override

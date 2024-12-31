@@ -1,35 +1,33 @@
-package _712.final_project_712.model;
+package _712.final_project_712.model.dto;
 
-import com.mybatisflex.annotation.Id;
-import com.mybatisflex.annotation.Table;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@Table("product")
-@Schema(description = "商品实体类")
-public class Product {
-    @Id
+@Schema(description = "商品数据传输对象")
+public class ProductDTO {
     @Schema(description = "商品ID")
     private Long id;
 
-    @Schema(description = "商品名称", required = true)
+    @Schema(description = "商品名称")
     private String name;
 
     @Schema(description = "商品描述")
     private String description;
 
-    @Schema(description = "商品价格", required = true)
+    @Schema(description = "商品价格")
     private BigDecimal price;
 
-    @Schema(description = "库存数量", required = true)
+    @Schema(description = "库存数量")
     private Integer stock;
 
-    @Schema(description = "分类ID", required = true)
+    @Schema(description = "分类ID")
     private Long categoryId;
+
+    @Schema(description = "分类名称")
+    private String categoryName;
 
     @Schema(description = "品牌")
     private String brand;
@@ -43,7 +41,7 @@ public class Product {
     @Schema(description = "商品图片URL")
     private String imageUrl;
 
-    @Schema(description = "商品状态：0-下架，1-上架", required = true)
+    @Schema(description = "商品状态：0-下架，1-上架")
     private Integer status;
 
     @Schema(description = "创建时间")

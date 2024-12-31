@@ -17,15 +17,16 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/file/**", "/favorite/**", "/order/**", "/review/**")
                 .excludePathPatterns(
-                    "/file/avatar/*/view/**",
-                    "/kaptcha/**",
-                    "/user/login",
-                    "/user/register",
-                    "/email/captcha/**",
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**",
-                    "/review/list",
-                    "/review/*/detail"
+                        "/file/avatar/*/view/**",
+                        "/kaptcha/**",
+                        "/user/login",
+                        "/user/register",
+                        "/email/captcha/**",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/product/**",
+                        "/review/list",
+                        "/review/*/detail"
                 );
     }
-} 
+}
