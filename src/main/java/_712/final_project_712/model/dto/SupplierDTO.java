@@ -9,6 +9,16 @@ import java.util.List;
 public class SupplierDTO {
 
     @Data
+    @Schema(description = "登录请求")
+    public static class LoginRequest {
+        @Schema(description = "用户名", example = "admin", required = true)
+        private String username;
+
+        @Schema(description = "密码", example = "admin123", required = true)
+        private String password;
+    }
+
+    @Data
     @Schema(description = "添加供应商请求")
     public static class AddSupplierRequest {
         @Schema(description = "供应商名称", example = "苹果中国", required = true)
