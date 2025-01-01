@@ -11,10 +11,17 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -83,5 +90,75 @@ public class ReturnOrderControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(500))
                 .andExpect(jsonPath("$.message").value("系统繁忙，请稍后重试"));
+    }
+
+    @Test
+    void testUpdateReturnStatus_Success() throws Exception {
+        doNothing().when(returnOrderService).updateReturnStatus(anyLong(), anyInt(), anyString());
+
+        mockMvc.perform(put("/return-orders/1/status")
+                .param("status", "1")
+                .param("handleNote", "同意退货"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void testUpdateReturnStatus_InvalidStatus() throws Exception {
+        doThrow(new IllegalArgumentException("无效的状态值"))
+                .when(returnOrderService).updateReturnStatus(anyLong(), anyInt(), anyString());
+
+        mockMvc.perform(put("/return-orders/1/status")
+                .param("status", "5")
+                .param("handleNote", "同意退货"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(500))
+                .andExpect(jsonPath("$.message").value("更新状态失败：无效的状态值"));
+    }
+
+    @Test
+    void testGetUserReturns_Success() throws Exception {
+        ReturnOrder returnOrder1 = new ReturnOrder();
+        returnOrder1.setId(1L);
+        returnOrder1.setOrderId(100L);
+        returnOrder1.setUserId(1L);
+        returnOrder1.setReturnReason("商品质量问题");
+        returnOrder1.setReturnAmount(new BigDecimal("100.00"));
+        returnOrder1.setStatus(0);
+
+        ReturnOrder returnOrder2 = new ReturnOrder();
+        returnOrder2.setId(2L);
+        returnOrder2.setOrderId(101L);
+        returnOrder2.setUserId(1L);
+        returnOrder2.setReturnReason("尺寸不合适");
+        returnOrder2.setReturnAmount(new BigDecimal("200.00"));
+        returnOrder2.setStatus(1);
+
+        List<ReturnOrder> returnOrders = Arrays.asList(returnOrder1, returnOrder2);
+        when(returnOrderService.getUserReturns(anyLong())).thenReturn(returnOrders);
+
+        mockMvc.perform(get("/return-orders/user/1"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].id").value(1))
+                .andExpect(jsonPath("$.data[0].returnReason").value("商品质量问题"))
+                .andExpect(jsonPath("$.data[1].id").value(2))
+                .andExpect(jsonPath("$.data[1].returnReason").value("尺寸不合适"));
+    }
+
+    @Test
+    void testGetUserReturns_Error() throws Exception {
+        when(returnOrderService.getUserReturns(anyLong()))
+                .thenThrow(new RuntimeException("数据库错误"));
+
+        mockMvc.perform(get("/return-orders/user/1"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(500))
+                .andExpect(jsonPath("$.message").value("查询失败：数据库错误"));
     }
 } 

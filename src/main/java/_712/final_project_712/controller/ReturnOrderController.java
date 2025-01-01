@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @Tag(name = "退货管理", description = "退货相关接口")
 @RestController
@@ -30,6 +31,34 @@ public class ReturnOrderController {
             return Result.success(returnOrder);
         } catch (Exception e) {
             return Result.error(500, "系统繁忙，请稍后重试");
+        }
+    }
+
+    @Operation(summary = "更新退货状态")
+    @PutMapping("/{returnId}/status")
+    public Result<Void> updateReturnStatus(
+        @Parameter(description = "退货ID") @PathVariable Long returnId,
+        @Parameter(description = "状态：0-待处理，1-已同意，2-已拒绝，3-已完成") @RequestParam Integer status,
+        @Parameter(description = "处理备注") @RequestParam(required = false) String handleNote
+    ) {
+        try {
+            returnOrderService.updateReturnStatus(returnId, status, handleNote);
+            return Result.success();
+        } catch (Exception e) {
+            return Result.error(500, "更新状态失败：" + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "查询用户的退货列表")
+    @GetMapping("/user/{userId}")
+    public Result<List<ReturnOrder>> getUserReturns(
+        @Parameter(description = "用户ID") @PathVariable Long userId
+    ) {
+        try {
+            List<ReturnOrder> returns = returnOrderService.getUserReturns(userId);
+            return Result.success(returns);
+        } catch (Exception e) {
+            return Result.error(500, "查询失败：" + e.getMessage());
         }
     }
 } 
