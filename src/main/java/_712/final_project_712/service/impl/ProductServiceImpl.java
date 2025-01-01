@@ -3,6 +3,7 @@ package _712.final_project_712.service.impl;
 import _712.final_project_712.mapper.ProductMapper;
 import _712.final_project_712.model.dto.ProductDTO;
 import _712.final_project_712.service.ProductService;
+import _712.final_project_712.Exception.BusinessException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -24,5 +25,17 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<ProductDTO> getAllProducts() {
         return productMapper.findAllProducts();
+    }
+
+    @Override
+    public ProductDTO getProductById(Long productId) {
+        if (productId == null) {
+            throw new BusinessException("商品ID不能为空");
+        }
+        ProductDTO product = productMapper.findById(productId);
+        if (product == null) {
+            throw new BusinessException("商品不存在");
+        }
+        return product;
     }
 } 

@@ -2,14 +2,17 @@ package _712.final_project_712.model;
 
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.Table;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
 @Table("orders")
+@Schema(description = "订单实体类")
 public class Orders {
     @Id
+    @Schema(description = "订单ID", example = "1")
     private Long id;
     
     private Long userId;

@@ -19,10 +19,10 @@ public class OrderServiceImpl implements OrderService {
     private OrderMapper orderMapper;
 
     @Override
-    public List<OrderDTO.OrderInfo> getAllOrders() {
+    public List<OrderDTO.OrderInfo> getUserOrders(Long userId) {
         try {
-            // 获取所有订单
-            List<OrderDTO.OrderInfo> orders = orderMapper.getAllOrders();
+            // 获取用户的订单
+            List<OrderDTO.OrderInfo> orders = orderMapper.getUserOrders(userId);
             
             // 获取每个订单的商品信息
             for (OrderDTO.OrderInfo order : orders) {
@@ -38,17 +38,17 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDTO.OrderInfo getOrderDetail(Long orderId) {
-        // 获取订单基本信息(包含用户信息)
-        OrderDTO.OrderInfo order = orderMapper.getOrderWithUser(orderId);
-        if (order == null) {
+        // 获取订单基本信息和用户信息
+        OrderDTO.OrderInfo orderInfo = orderMapper.getOrderWithUser(orderId);
+        if (orderInfo == null) {
             throw new BusinessException("订单不存在");
         }
         
         // 获取订单商品信息
         List<OrderDTO.OrderItemInfo> items = orderMapper.getOrderItems(orderId);
-        order.setItems(items);
+        orderInfo.setItems(items);
         
-        return order;
+        return orderInfo;
     }
 
     @Override

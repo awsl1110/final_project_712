@@ -22,11 +22,15 @@ public class OrderController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Operation(summary = "获取订单列表")
+    @Operation(summary = "获取用户订单列表")
     @GetMapping("/list")
-    public Result<List<OrderDTO.OrderInfo>> getOrderList() {
+    public Result<List<OrderDTO.OrderInfo>> getUserOrders(
+            @Parameter(description = "用户认证token", required = true)
+            @RequestHeader("Authorization") String token) {
         try {
-            List<OrderDTO.OrderInfo> orders = orderService.getAllOrders();
+            // 从token中获取用户ID
+            Long userId = jwtUtil.getUserIdFromToken(token);
+            List<OrderDTO.OrderInfo> orders = orderService.getUserOrders(userId);
             return Result.success(orders);
         } catch (Exception e) {
             return Result.error(e.getMessage());

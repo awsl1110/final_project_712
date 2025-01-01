@@ -5,12 +5,12 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('@/views/user/login.vue')
+    component: () => import('@/views/login.vue')
   },
   {
     path: '/register',
     name: 'Register',
-    component: () => import('@/views/user/register.vue')
+    component: () => import('@/views/register.vue')
   },
   {
     path: '/',
@@ -21,7 +21,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'dashboard',
         name: 'Dashboard',
-        component: () => import('@/views/dashboard/index.vue'),
+        component: () => import('@/views/dashboard.vue'),
         meta: {
           title: '首页',
           requiresAuth: true
@@ -30,9 +30,54 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'password',
         name: 'Password',
-        component: () => import('@/views/user/password.vue'),
+        component: () => import('@/views/password.vue'),
         meta: {
           title: '修改密码',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'products',
+        name: 'Products',
+        component: () => import('@/views/products.vue'),
+        meta: {
+          title: '商品列表',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'product/:id',
+        name: 'ProductDetail',
+        component: () => import('@/views/product-detail.vue'),
+        meta: {
+          title: '商品详情',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'cart',
+        name: 'Cart',
+        component: () => import('@/views/cart.vue'),
+        meta: {
+          title: '购物车',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'orders',
+        name: 'Orders',
+        component: () => import('@/views/orders.vue'),
+        meta: {
+          title: '我的订单',
+          requiresAuth: true
+        }
+      },
+      {
+        path: 'favorites',
+        name: 'Favorites',
+        component: () => import('@/views/favorites.vue'),
+        meta: {
+          title: '我的收藏',
           requiresAuth: true
         }
       }
