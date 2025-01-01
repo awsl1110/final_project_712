@@ -38,4 +38,15 @@ public class SalesStatisticsController {
             return Result.error("获取每月销售统计失败：" + e.getMessage());
         }
     }
+
+    @Operation(summary = "获取分类销售统计")
+    @GetMapping("/category")
+    public Result<List<SalesStatistics>> getCategorySalesStatistics() {
+        try {
+            List<SalesStatistics> statistics = salesStatisticsService.getCategorySalesStatistics();
+            return Result.success(statistics);
+        } catch (Exception e) {
+            return Result.error("获取分类销售统计失败：" + e.getMessage());
+        }
+    }
 } 
