@@ -11,16 +11,26 @@ import java.time.LocalDateTime;
 public class Orders {
     @Id
     private Long id;
-    private String orderNo;
+    
     private Long userId;
+    
     private BigDecimal totalAmount;
-    private Integer status; // 0-待付款，1-待发货，2-待收货，3-已完成，4-已取消
+    
+    private Integer status;
+    
     private String address;
+    
     private String receiverName;
+    
     private String receiverPhone;
+    
     private String remark;
+    
     private LocalDateTime payTime;
+    
     private LocalDateTime shipTime;
+    
     private LocalDateTime createTime;
+    
     private LocalDateTime updateTime;
 } 
