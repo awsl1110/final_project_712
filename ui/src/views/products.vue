@@ -9,7 +9,7 @@ import type { AddToFavoriteRes, AddToFavoriteParams } from '@/api/favorite'
 import type { Product } from '@/api/product'
 import type { Result } from '@/types/api'
 import { ElMessage } from 'element-plus'
-import { ShoppingCart, Star } from '@element-plus/icons-vue'
+import { ShoppingCart, Star, PictureFilled } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const products = ref<Product[]>([])
@@ -95,37 +95,48 @@ onMounted(() => {
       <el-row :gutter="20">
         <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="product in products" :key="product.id">
           <el-card class="product-card" :body-style="{ padding: '0px' }">
-            <div class="product-content" @click="handleViewDetail(product)">
-              <img :src="product.imageUrl || '/default-product.jpg'" class="product-image">
-              <div class="product-info">
-                <h3 class="product-name">{{ product.name }}</h3>
-                <p class="product-description">{{ product.description }}</p>
-                <div class="product-meta">
-                  <span class="product-brand">{{ product.brand }}</span>
-                  <span class="product-model">{{ product.model }}</span>
-                </div>
-                <div class="product-footer">
-                  <div class="product-price">
-                    <span class="price">¥{{ product.price.toLocaleString() }}</span>
-                    <span class="stock">库存: {{ product.stock }}</span>
+            <div class="product-content">
+              <div class="product-main" @click="handleViewDetail(product)">
+                <el-image 
+                  :src="product.imageUrl || '/default-product.jpg'" 
+                  :alt="product.name"
+                  class="product-image"
+                  fit="cover"
+                >
+                  <template #error>
+                    <div class="image-slot">
+                      <el-icon><picture-filled /></el-icon>
+                    </div>
+                  </template>
+                </el-image>
+                <div class="product-info">
+                  <el-text class="product-name" truncated>{{ product.name }}</el-text>
+                  <el-text class="product-description" type="info">{{ product.description }}</el-text>
+                  <div class="product-meta">
+                    <el-tag size="small" type="info">{{ product.brand }}</el-tag>
+                    <el-tag size="small" type="info">{{ product.model }}</el-tag>
+                  </div>
+                  <div class="product-footer">
+                    <el-text class="price" type="danger" size="large">¥{{ product.price.toLocaleString() }}</el-text>
+                    <el-text class="stock" type="info">库存: {{ product.stock }}</el-text>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="product-actions">
-              <el-button 
-                type="warning"
-                :icon="Star"
-                circle
-                @click.stop="handleAddToFavorite(product)"
-              />
-              <el-button 
-                type="primary" 
-                :icon="ShoppingCart"
-                circle
-                @click.stop="handleAddToCart(product)"
-                :disabled="product.stock <= 0"
-              />
+              <div class="product-actions">
+                <el-button 
+                  type="warning"
+                  :icon="Star"
+                  circle
+                  @click="handleAddToFavorite(product)"
+                />
+                <el-button 
+                  type="primary" 
+                  :icon="ShoppingCart"
+                  circle
+                  @click="handleAddToCart(product)"
+                  :disabled="product.stock <= 0"
+                />
+              </div>
             </div>
           </el-card>
         </el-col>
@@ -136,7 +147,7 @@ onMounted(() => {
 
 <style scoped>
 .product-container {
-  padding: 20px;
+  padding: var(--el-main-padding);
 }
 
 .page-header {
@@ -150,7 +161,7 @@ onMounted(() => {
 }
 
 .title {
-  font-size: 20px;
+  font-size: var(--el-font-size-extra-large);
   font-weight: bold;
 }
 
@@ -160,87 +171,63 @@ onMounted(() => {
 
 .product-card {
   margin-bottom: 20px;
-  transition: all 0.3s;
-}
-
-.product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  height: 400px;
+  position: relative;
 }
 
 .product-image {
   width: 100%;
   height: 200px;
-  object-fit: cover;
+}
+
+.image-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: var(--el-fill-color-light);
+  color: var(--el-text-color-secondary);
+  font-size: 30px;
 }
 
 .product-info {
-  padding: 14px;
+  padding: var(--el-card-padding);
+  height: 200px;
+  display: flex;
+  flex-direction: column;
 }
 
 .product-name {
-  margin: 0;
-  font-size: 16px;
+  display: block;
+  font-size: var(--el-font-size-large);
   font-weight: bold;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin-bottom: 8px;
 }
 
 .product-description {
-  margin: 8px 0;
-  font-size: 14px;
-  color: #666;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: block;
+  margin-bottom: 8px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  height: 40px;
-}
-
-.product-meta {
-  margin: 8px 0;
-  font-size: 14px;
-}
-
-.product-brand, .product-model {
-  color: #666;
-  margin-right: 10px;
-}
-
-.product-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-}
-
-.product-price {
+  overflow: hidden;
   flex: 1;
 }
 
-.product-actions {
+.product-meta {
+  margin-bottom: 8px;
   display: flex;
   gap: 8px;
-  margin-left: 10px;
-}
-
-.price {
-  color: #f56c6c;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.stock {
-  font-size: 14px;
-  color: #666;
 }
 
 .product-content {
+  height: 100%;
+}
+
+.product-main {
   cursor: pointer;
-  position: relative;
-  padding-bottom: 50px;
+  height: 100%;
 }
 
 .product-actions {
@@ -249,31 +236,25 @@ onMounted(() => {
   bottom: 14px;
   display: flex;
   gap: 8px;
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 4px;
-  border-radius: 4px;
   z-index: 1;
+}
+
+.product-actions .el-button {
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
 }
 
 .product-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 10px;
-}
-
-.product-price {
-  flex: 1;
 }
 
 .price {
-  color: #f56c6c;
-  font-size: 18px;
+  font-size: var(--el-font-size-extra-large);
   font-weight: bold;
 }
 
 .stock {
-  font-size: 14px;
-  color: #666;
+  font-size: var(--el-font-size-small);
 }
 </style> 

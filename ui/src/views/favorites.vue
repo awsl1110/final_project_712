@@ -3,15 +3,15 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getFavorites, removeFavorite } from '@/api/favorite'
 import type { FavoriteItem, GetFavoritesRes, AddToFavoriteRes } from '@/api/favorite'
-import type { Result } from '@/types/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete, ShoppingCart } from '@element-plus/icons-vue'
+import { Delete, ShoppingCart, Picture } from '@element-plus/icons-vue'
 import { addToCart } from '@/api/cart'
 import type { AddToCartParams, AddToCartRes } from '@/api/cart'
 
 const router = useRouter()
 const favorites = ref<FavoriteItem[]>([])
 const loading = ref(true)
+const loadingItem = ref<number | null>(null)
 
 // 获取收藏列表
 const fetchFavorites = async () => {
@@ -42,6 +42,7 @@ const handleRemove = async (item: FavoriteItem) => {
       type: 'warning'
     })
     
+    loadingItem.value = item.id
     const response = await removeFavorite(item.id)
     if (response.data) {
       const res = response.data as AddToFavoriteRes
@@ -51,19 +52,25 @@ const handleRemove = async (item: FavoriteItem) => {
       } else {
         ElMessage.error(res.message || '取消收藏失败')
       }
-    } else {
-      ElMessage.error('取消收藏失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('取消收藏失败')
     }
+  } finally {
+    loadingItem.value = null
   }
 }
 
 // 添加到购物车
 const handleAddToCart = async (item: FavoriteItem) => {
+  if (item.product.stock <= 0) {
+    ElMessage.warning('商品库存不足')
+    return
+  }
+
   try {
+    loadingItem.value = item.id
     const params: AddToCartParams = {}
     const response = await addToCart(item.productId, 1, params)
     if (response.data) {
@@ -73,11 +80,11 @@ const handleAddToCart = async (item: FavoriteItem) => {
       } else {
         ElMessage.error(res.message || '添加到购物车失败')
       }
-    } else {
-      ElMessage.error('添加到购物车失败')
     }
   } catch (error) {
     ElMessage.error('添加到购物车失败')
+  } finally {
+    loadingItem.value = null
   }
 }
 
@@ -102,76 +109,108 @@ onMounted(() => {
 
 <template>
   <div class="favorites-container">
-    <el-card class="page-header">
-      <template #header>
-        <div class="header">
+    <div class="page-header">
+      <div class="header">
+        <div class="title-wrapper">
           <span class="title">我的收藏</span>
+          <span class="count">共 {{ favorites.length }} 件商品</span>
         </div>
-      </template>
-    </el-card>
+      </div>
+    </div>
 
-    <div class="favorites-content" v-loading="loading">
-      <el-empty v-if="favorites.length === 0" description="暂无收藏" />
+    <div class="favorites-content">
+      <el-empty 
+        v-if="!loading && favorites.length === 0" 
+        description="暂无收藏商品" 
+      >
+        <template #extra>
+          <el-button type="primary" @click="router.push('/products')">
+            去逛逛
+          </el-button>
+        </template>
+      </el-empty>
       
-      <template v-else>
-        <el-row :gutter="20">
-          <el-col 
-            :xs="24" 
-            :sm="12" 
-            :md="8" 
-            :lg="6" 
-            v-for="item in favorites" 
-            :key="item.id"
-          >
-            <el-card class="favorite-card" :body-style="{ padding: '0px' }">
-              <div class="product-content" @click="handleViewDetail(item)">
-                <img 
+      <el-row v-else :gutter="20" v-loading="loading">
+        <el-col 
+          :xs="24" 
+          :sm="12" 
+          :md="8" 
+          :lg="6" 
+          v-for="item in favorites" 
+          :key="item.id"
+        >
+          <el-card class="favorite-card" shadow="hover">
+            <div class="product-content">
+              <div class="product-main" @click="handleViewDetail(item)">
+                <el-image 
                   :src="item.product.imageUrl || '/default-product.jpg'" 
                   :alt="item.product.name"
                   class="product-image"
+                  fit="cover"
                 >
+                  <template #error>
+                    <div class="image-slot">
+                      <el-icon><Picture /></el-icon>
+                    </div>
+                  </template>
+                </el-image>
                 <div class="product-info">
-                  <h3 class="product-name">{{ item.product.name }}</h3>
-                  <p class="product-description">{{ item.product.description }}</p>
+                  <div class="product-name">{{ item.product.name }}</div>
+                  <div class="product-description">{{ item.product.description }}</div>
                   <div class="product-meta">
-                    <span class="product-brand">{{ item.product.brand }}</span>
-                    <span class="product-model">{{ item.product.model }}</span>
-                  </div>
-                  <div class="product-footer">
-                    <span class="price">{{ formatPrice(item.product.price) }}</span>
+                    <el-tag size="small" effect="plain">{{ item.product.brand }}</el-tag>
+                    <el-tag size="small" type="info" effect="plain">{{ item.product.model }}</el-tag>
                   </div>
                 </div>
               </div>
-              <div class="product-actions">
-                <el-button
-                  type="primary"
-                  :icon="ShoppingCart"
-                  circle
-                  @click.stop="handleAddToCart(item)"
-                  :disabled="item.product.stock <= 0"
-                />
-                <el-button
-                  type="danger"
-                  :icon="Delete"
-                  circle
-                  @click.stop="handleRemove(item)"
-                />
+              <div class="product-footer">
+                <div class="price-stock">
+                  <span class="price">{{ formatPrice(item.product.price) }}</span>
+                  <el-tag 
+                    :type="item.product.stock > 0 ? 'success' : 'error'" 
+                    size="small"
+                    effect="plain"
+                  >
+                    {{ item.product.stock > 0 ? '有货' : '无货' }}
+                  </el-tag>
+                </div>
+                <div class="product-actions">
+                  <el-button 
+                    circle
+                    type="danger"
+                    @click.stop="handleRemove(item)"
+                    :loading="loadingItem === item.id"
+                  >
+                    <el-icon><Delete /></el-icon>
+                  </el-button>
+                  <el-button 
+                    circle
+                    type="primary" 
+                    @click.stop="handleAddToCart(item)"
+                    :loading="loadingItem === item.id"
+                    :disabled="item.product.stock <= 0"
+                  >
+                    <el-icon><ShoppingCart /></el-icon>
+                  </el-button>
+                </div>
               </div>
-            </el-card>
-          </el-col>
-        </el-row>
-      </template>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
     </div>
   </div>
 </template>
 
 <style scoped>
 .favorites-container {
-  padding: 20px;
+  padding: var(--el-main-padding);
+  background-color: var(--el-bg-color-page);
+  min-height: calc(100vh - var(--el-header-height));
 }
 
 .page-header {
-  margin-bottom: 20px;
+  margin-bottom: var(--el-main-padding);
 }
 
 .header {
@@ -180,94 +219,142 @@ onMounted(() => {
   align-items: center;
 }
 
+.title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .title {
-  font-size: 20px;
-  font-weight: bold;
+  font-size: var(--el-font-size-large);
+  font-weight: var(--el-font-weight-bold);
+  color: var(--el-text-color-primary);
+}
+
+.count {
+  font-size: var(--el-font-size-base);
+  color: var(--el-text-color-secondary);
 }
 
 .favorites-content {
-  min-height: 200px;
+  min-height: 300px;
+}
+
+.el-row {
+  margin-bottom: -16px;
+  margin-right: -16px;
+}
+
+.el-col {
+  padding-bottom: 16px;
+  padding-right: 16px;
 }
 
 .favorite-card {
-  margin-bottom: 20px;
-  transition: all 0.3s;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--el-border-radius-base);
+  height: 100%;
 }
 
-.favorite-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.favorite-card :deep(.el-card__body) {
+  padding: 0;
+  height: 100%;
+}
+
+.product-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.product-main {
+  flex: 1;
+  cursor: pointer;
 }
 
 .product-image {
   width: 100%;
-  height: 200px;
+  aspect-ratio: 1;
   object-fit: cover;
 }
 
+.image-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: var(--el-fill-color-light);
+  color: var(--el-text-color-secondary);
+  font-size: var(--el-font-size-extra-large);
+}
+
 .product-info {
-  padding: 14px;
+  padding: var(--el-card-padding);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .product-name {
-  margin: 0 0 8px;
-  font-size: 16px;
-  font-weight: bold;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.product-description {
-  margin: 0 0 8px;
-  font-size: 14px;
-  color: #666;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: var(--el-font-size-base);
+  font-weight: var(--el-font-weight-bold);
+  color: var(--el-text-color-primary);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  height: 40px;
+  overflow: hidden;
+  line-height: 1.5;
+}
+
+.product-description {
+  font-size: var(--el-font-size-small);
+  color: var(--el-text-color-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
 }
 
 .product-meta {
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.product-brand, .product-model {
-  color: #666;
-  margin-right: 10px;
-}
-
-.product-content {
-  cursor: pointer;
-  position: relative;
-  padding-bottom: 50px;
-}
-
-.product-actions {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
   display: flex;
   gap: 8px;
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 4px;
-  border-radius: 4px;
-  z-index: 1;
+  flex-wrap: wrap;
 }
 
 .product-footer {
+  padding: var(--el-card-padding);
+  border-top: 1px solid var(--el-border-color-lighter);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 10px;
+  background-color: var(--el-fill-color-light);
+}
+
+.price-stock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .price {
-  color: #f56c6c;
-  font-size: 18px;
-  font-weight: bold;
+  font-size: var(--el-font-size-large);
+  font-weight: var(--el-font-weight-bold);
+  color: var(--el-color-danger);
+}
+
+.product-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.product-actions :deep(.el-button) {
+  --el-button-size: 32px;
+  --el-button-padding-horizontal: 0;
+}
+
+.product-actions :deep(.el-button .el-icon) {
+  font-size: var(--el-font-size-base);
 }
 </style> 
