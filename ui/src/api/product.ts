@@ -22,4 +22,16 @@ export function getProducts() {
     url: '/product/list',
     method: 'get'
   })
+}
+
+/** 
+ * 获取商品详情
+ * @param {number} id 商品ID
+ * @returns {Promise<Result<Product>>} 商品详情
+ */
+export function getProductDetail(id: number) {
+  return request({
+    url: `/product/${id}`,
+    method: 'get'
+  })
 } 

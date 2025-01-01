@@ -1,5 +1,12 @@
 import request from '@/utils/request'
 
+// 删除订单响应接口
+export interface DeleteOrderRes {
+  code: number
+  message: string
+  data: null
+}
+
 export interface OrderItem {
   id: number
   orderId: number
@@ -55,9 +62,9 @@ export function cancelOrder(id: number) {
 }
 
 // 删除订单
-export function deleteOrder(id: number) {
+export function deleteOrder(orderId: number): Promise<DeleteOrderRes> {
   return request({
-    url: `/order/delete/${id}`,
+    url: `/order/${orderId}`,
     method: 'delete'
   })
 } 

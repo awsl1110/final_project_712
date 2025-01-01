@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { getCartList, updateCartQuantity, removeFromCart, updateCartSelection } from '@/api/cart'
-import type { CartItem } from '@/api/cart'
+import type { CartItem, RemoveFromCartRes, RemoveFromCartParams } from '@/api/cart'
 import type { Result } from '@/types/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Minus, Delete } from '@element-plus/icons-vue'
@@ -69,13 +69,18 @@ const handleDelete = async (item: CartItem) => {
       type: 'warning'
     })
     
-    const response = await removeFromCart(item.id)
-    const res = response.data as Result<any>
-    if (res.code === 200) {
-      cartItems.value = cartItems.value.filter(i => i.id !== item.id)
-      ElMessage.success('删除成功')
+    const params: RemoveFromCartParams = {}
+    const response = await removeFromCart(item.productId, params)
+    if (response.data) {
+      const res = response.data as RemoveFromCartRes
+      if (res.code === 200) {
+        cartItems.value = cartItems.value.filter(i => i.id !== item.id)
+        ElMessage.success('删除成功')
+      } else {
+        ElMessage.error(res.message || '删除失败')
+      }
     } else {
-      ElMessage.error(res.message || '删除失败')
+      ElMessage.error('删除失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
