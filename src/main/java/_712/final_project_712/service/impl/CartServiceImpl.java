@@ -1,10 +1,11 @@
 package _712.final_project_712.service.impl;
 
 import _712.final_project_712.Exception.BusinessException;
-import _712.final_project_712.mapper.CartItemMapper;
+import _712.final_project_712.mapper.CartMapper;
 import _712.final_project_712.mapper.ProductMapper;
 import _712.final_project_712.model.CartItem;
 import _712.final_project_712.model.Product;
+import _712.final_project_712.model.dto.CartDTO;
 import _712.final_project_712.service.CartService;
 import com.mybatisflex.core.query.QueryChain;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +19,24 @@ import java.util.List;
 public class CartServiceImpl implements CartService {
 
     @Autowired
-    private CartItemMapper cartItemMapper;
+    private CartMapper cartMapper;
     
     @Autowired
     private ProductMapper productMapper;
 
+    @Override
+    public List<CartDTO> getCartList(Long userId) {
+        try {
+            System.out.println("Getting cart list for user: " + userId); // 添加日志
+            List<CartDTO> cartList = cartMapper.getCartList(userId);
+            System.out.println("Found " + (cartList != null ? cartList.size() : 0) + " items"); // 添加日志
+            return cartList;
+        } catch (Exception e) {
+            e.printStackTrace(); // 打印错误堆栈
+            throw new BusinessException("获取购物车列表失败: " + e.getMessage());
+        }
+    }
+    
     @Override
     @Transactional
     public void addToCart(Long userId, Long productId, Integer quantity) {
@@ -64,7 +78,7 @@ public class CartServiceImpl implements CartService {
             // 更新数量
             existingItem.setQuantity(newQuantity);
             existingItem.setUpdateTime(LocalDateTime.now());
-            cartItemMapper.update(existingItem);
+            cartMapper.update(existingItem);
         } else {
             // 新增购物车项
             CartItem cartItem = new CartItem();
@@ -74,36 +88,18 @@ public class CartServiceImpl implements CartService {
             cartItem.setSelected(1);  // 默认选中
             cartItem.setCreateTime(LocalDateTime.now());
             cartItem.setUpdateTime(LocalDateTime.now());
-            cartItemMapper.insert(cartItem);
+            cartMapper.insert(cartItem);
         }
     }
 
     @Override
     @Transactional
     public void removeFromCart(Long userId, Long productId) {
-        cartItemMapper.deleteByQuery(
+        // 从购物车中删除商品
+        cartMapper.deleteByQuery(
             QueryChain.of(CartItem.class)
                 .where("user_id = ?", userId)
                 .and("product_id = ?", productId)
         );
-    }
-
-    @Override
-    public List<CartItem> getCartItems(Long userId) {
-        // 获取购物车列表
-        List<CartItem> cartItems = QueryChain.of(CartItem.class)
-                .where("user_id = ?", userId)
-                .orderBy("create_time desc")
-                .list();
-        
-        // 填充商品名称
-        for (CartItem cartItem : cartItems) {
-            Product product = productMapper.selectOneById(cartItem.getProductId());
-            if (product != null) {
-                cartItem.setProductName(product.getName());
-            }
-        }
-        
-        return cartItems;
     }
 } 
