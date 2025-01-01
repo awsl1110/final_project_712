@@ -31,4 +31,17 @@ public interface SalesStatisticsMapper {
             "WHERE o.status = 3 " +
             "GROUP BY p.id, p.name, YEAR(o.create_time), MONTH(o.create_time)")
     List<SalesStatistics> getMonthlySalesStatistics();
+
+    @Select("SELECT pc.id as categoryId, pc.name as categoryName, " +
+            "COUNT(DISTINCT o.id) as salesCount, " +
+            "SUM(oi.subtotal) as salesAmount, " +
+            "DATE(MIN(o.create_time)) as statisticsTime, " +
+            "'CATEGORY' as timeRange " +
+            "FROM product_category pc " +
+            "LEFT JOIN product p ON p.category_id = pc.id " +
+            "LEFT JOIN order_items oi ON p.id = oi.product_id " +
+            "LEFT JOIN orders o ON oi.order_id = o.id " +
+            "WHERE o.status = 3 " +
+            "GROUP BY pc.id, pc.name")
+    List<SalesStatistics> getCategorySalesStatistics();
 } 

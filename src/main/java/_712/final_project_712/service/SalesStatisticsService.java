@@ -19,4 +19,8 @@ public class SalesStatisticsService {
     public List<SalesStatistics> getMonthlySalesStatistics() {
         return salesStatisticsMapper.getMonthlySalesStatistics();
     }
+
+    public List<SalesStatistics> getCategorySalesStatistics() {
+        return salesStatisticsMapper.getCategorySalesStatistics();
+    }
 } 

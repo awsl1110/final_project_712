@@ -8,8 +8,10 @@ import java.time.LocalDateTime;
 public class SalesStatistics {
     private Long productId;
     private String productName;
-    private Integer salesCount;  // 销售数量
-    private BigDecimal salesAmount;  // 销售金额
-    private LocalDateTime statisticsTime;  // 统计时间
-    private String timeRange;  // 时间范围(日/周/月)
+    private Long categoryId;
+    private String categoryName;
+    private Integer salesCount;
+    private BigDecimal salesAmount;
+    private LocalDateTime statisticsTime;
+    private String timeRange;  // DAY/MONTH/CATEGORY
 } 
