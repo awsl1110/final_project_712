@@ -4,9 +4,9 @@ import { useRouter } from 'vue-router'
 import { getProducts } from '@/api/product'
 import { addToCart } from '@/api/cart'
 import { addToFavorite } from '@/api/favorite'
-import type { AddToCartRes, AddToCartParams } from '@/api/cart'
-import type { AddToFavoriteRes, AddToFavoriteParams } from '@/api/favorite'
 import type { Product } from '@/api/product'
+import type { AddToCartParams, CartResponse } from '@/api/cart'
+import type { AddToFavoriteRes, AddToFavoriteParams } from '@/api/favorite'
 import type { Result } from '@/types/api'
 import { ElMessage } from 'element-plus'
 import { ShoppingCart, Star, PictureFilled } from '@element-plus/icons-vue'
@@ -34,10 +34,13 @@ const fetchProducts = async () => {
 // 添加到购物车
 const handleAddToCart = async (product: Product) => {
   try {
-    const params: AddToCartParams = {}
-    const response = await addToCart(product.id, 1, params)
+    const params: AddToCartParams = {
+      productId: product.id,
+      quantity: 1
+    }
+    const response = await addToCart(params)
     if (response.data) {
-      const res = response.data as AddToCartRes
+      const res = response.data as CartResponse
       if (res.code === 200) {
         ElMessage.success('添加到购物车成功')
       } else {

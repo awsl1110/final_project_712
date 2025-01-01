@@ -102,4 +102,47 @@ public class CartServiceImpl implements CartService {
                 .and("product_id = ?", productId)
         );
     }
+
+    @Override
+    @Transactional
+    public void updateCartItemSelected(Long userId, Long cartId, Integer selected) {
+        CartItem cartItem = QueryChain.of(CartItem.class)
+                .where("id = ?", cartId)
+                .and("user_id = ?", userId)
+                .one();
+                
+        if (cartItem == null) {
+            throw new BusinessException("购物车商品不存在");
+        }
+        
+        cartItem.setSelected(selected);
+        cartItem.setUpdateTime(LocalDateTime.now());
+        cartMapper.update(cartItem);
+    }
+    
+    @Override
+    public List<CartDTO> getSelectedCartItems(Long userId) {
+        try {
+            List<CartDTO> cartList = cartMapper.getSelectedCartList(userId);
+            if (cartList == null || cartList.isEmpty()) {
+                throw new BusinessException("未选择任何商品");
+            }
+            return cartList;
+        } catch (Exception e) {
+            throw new BusinessException("获取选中商品失败: " + e.getMessage());
+        }
+    }
+    
+    @Override
+    @Transactional
+    public void clearSettledItems(List<Long> cartIds) {
+        if (cartIds == null || cartIds.isEmpty()) {
+            return;
+        }
+        
+        cartMapper.deleteByQuery(
+            QueryChain.of(CartItem.class)
+                .where(CartItem::getId).in(cartIds)
+        );
+    }
 } 

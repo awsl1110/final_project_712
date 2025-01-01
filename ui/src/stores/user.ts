@@ -1,13 +1,26 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { userApi } from '@/api/user'
-import type { UserLoginParams, UserRegisterParams, UpdatePasswordParams } from '@/types/api'
+import type { UserLoginParams, UserRegisterParams, UpdatePasswordParams, UserProfile } from '@/types/api'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('token') ?? '')
   const username = ref(localStorage.getItem('username') ?? '')
   const avatarUrl = ref('')
+  const userProfile = ref<UserProfile | null>(null)
   const isLoggedIn = computed(() => !!token.value)
+
+  const fetchUserProfile = async () => {
+    if (!isLoggedIn.value) return
+    
+    try {
+      const res = await userApi.getProfile()
+      userProfile.value = res.data.data
+    } catch (error) {
+      console.error('获取用户信息失败:', error)
+      throw error
+    }
+  }
 
   const login = async (loginForm: UserLoginParams) => {
     const res = await userApi.login(loginForm)
@@ -28,6 +41,9 @@ export const useUserStore = defineStore('user', () => {
     localStorage.setItem('username', loginForm.username)
     token.value = tokenValue
     username.value = loginForm.username
+
+    // 登录后获取用户信息
+    await fetchUserProfile()
   }
 
   const logout = () => {
@@ -37,6 +53,7 @@ export const useUserStore = defineStore('user', () => {
     token.value = ''
     username.value = ''
     avatarUrl.value = ''
+    userProfile.value = null
     localStorage.removeItem('token')
     localStorage.removeItem('username')
   }
@@ -148,12 +165,14 @@ export const useUserStore = defineStore('user', () => {
     token,
     username,
     avatarUrl,
+    userProfile,
     isLoggedIn,
     login,
     logout,
+    fetchAvatar,
+    uploadAvatar,
     register,
     updatePassword,
-    uploadAvatar,
-    fetchAvatar
+    fetchUserProfile
   }
 }) 

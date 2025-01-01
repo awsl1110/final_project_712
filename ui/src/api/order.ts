@@ -32,6 +32,47 @@ export interface Order {
   updateTime: string
 }
 
+// 创建订单请求接口
+export interface CreateOrderRequest {
+  cartIds: number[]
+  addressId: number
+  remark?: string
+}
+
+// 创建订单响应接口
+export interface OrderInfo {
+  id: number
+  userId: number
+  userName: string
+  userEmail: string
+  totalAmount: number
+  receiverName: string
+  receiverPhone: string
+  address: string
+  status: number
+  remark: string
+  createTime: string
+  updateTime: string
+  items: OrderItemInfo[]
+}
+
+export interface OrderItemInfo {
+  id: number
+  orderId: number
+  productId: number
+  productName: string
+  productPrice: number
+  productImage: string
+  quantity: number
+  subtotal: number
+}
+
+export interface ResultOrderInfo {
+  code: number
+  message: string
+  data: OrderInfo
+}
+
 // 获取订单列表
 export function getOrders() {
   return request({
@@ -41,15 +82,15 @@ export function getOrders() {
 }
 
 // 创建订单
-export function createOrder(data: {
-  addressId: number
-  remark?: string
-  items: { productId: number; quantity: number }[]
-}) {
-  return request({
+export function createOrder(data: CreateOrderRequest) {
+  const token = localStorage.getItem('token')
+  return request<ResultOrderInfo>({
     url: '/order/create',
     method: 'post',
-    data
+    data,
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : ''
+    }
   })
 }
 
@@ -66,5 +107,17 @@ export function deleteOrder(orderId: number): Promise<DeleteOrderRes> {
   return request({
     url: `/order/${orderId}`,
     method: 'delete'
+  })
+}
+
+// 获取订单详情
+export function getOrderDetail(orderId: number) {
+  const token = localStorage.getItem('token')
+  return request<ResultOrderInfo>({
+    url: `/order/${orderId}`,
+    method: 'get',
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : ''
+    }
   })
 } 

@@ -23,6 +23,27 @@ export interface UserRegisterParams {
   email: string
 }
 
+export interface Address {
+  id: number
+  userId: number
+  receiverName: string
+  receiverPhone: string
+  province: string
+  city: string
+  district: string
+  detailAddress: string
+  isDefault: boolean
+  createTime: string
+  updateTime: string
+}
+
+export interface UserProfile {
+  id: number
+  name: string
+  email: string
+  addresses: Address[]
+}
+
 export interface UpdatePasswordParams {
   oldPassword: string
   newPassword: string

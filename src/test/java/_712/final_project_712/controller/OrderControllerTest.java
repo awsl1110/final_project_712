@@ -42,7 +42,6 @@ public class OrderControllerTest {
         // 创建测试订单数据
         testOrder = new Orders();
         testOrder.setId(1L);
-        testOrder.setOrderNo("TEST_ORDER_001");
         testOrder.setUserId(1L);
         testOrder.setTotalAmount(new BigDecimal("999.99"));
         testOrder.setStatus(0);

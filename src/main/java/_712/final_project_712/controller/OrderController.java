@@ -37,6 +37,27 @@ public class OrderController {
         }
     }
 
+    @Operation(summary = "创建订单")
+    @PostMapping("/create")
+    public Result<OrderDTO.OrderInfo> createOrder(
+            @Parameter(description = "用户认证token", required = true)
+            @RequestHeader("Authorization") String token,
+            @Parameter(description = "创建订单请求", required = true)
+            @RequestBody OrderDTO.CreateOrderRequest request) {
+        try {
+            String actualToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+            Long userId = jwtUtil.getUserIdFromToken(actualToken);
+            if (userId == null) {
+                return Result.error("无效的token");
+            }
+            
+            OrderDTO.OrderInfo order = orderService.createOrder(userId, request);
+            return Result.success(order);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
     @Operation(summary = "获取订单详情")
     @GetMapping("/{orderId}")
     public Result<OrderDTO.OrderInfo> getOrderDetail(

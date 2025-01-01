@@ -1,6 +1,7 @@
 package _712.final_project_712.model;
 
 import com.mybatisflex.annotation.Id;
+import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 @Table("orders")
 @Schema(description = "订单实体类")
 public class Orders {
-    @Id
+    @Id(keyType = KeyType.Auto)
     @Schema(description = "订单ID", example = "1")
     private Long id;
     

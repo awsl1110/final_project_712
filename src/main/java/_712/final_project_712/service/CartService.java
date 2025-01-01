@@ -18,4 +18,19 @@ public interface CartService {
      * 从购物车删除商品
      */
     void removeFromCart(Long userId, Long productId);
+    
+    /**
+     * 更新购物车商品选中状态
+     */
+    void updateCartItemSelected(Long userId, Long cartId, Integer selected);
+    
+    /**
+     * 获取用户选中的购物车商品
+     */
+    List<CartDTO> getSelectedCartItems(Long userId);
+    
+    /**
+     * 清空已结算的购物车商品
+     */
+    void clearSettledItems(List<Long> cartIds);
 }

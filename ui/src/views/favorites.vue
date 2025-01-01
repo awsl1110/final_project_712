@@ -6,7 +6,7 @@ import type { FavoriteItem, GetFavoritesRes, AddToFavoriteRes } from '@/api/favo
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, ShoppingCart, Picture } from '@element-plus/icons-vue'
 import { addToCart } from '@/api/cart'
-import type { AddToCartParams, AddToCartRes } from '@/api/cart'
+import type { AddToCartParams, CartResponse } from '@/api/cart'
 
 const router = useRouter()
 const favorites = ref<FavoriteItem[]>([])
@@ -71,18 +71,23 @@ const handleAddToCart = async (item: FavoriteItem) => {
 
   try {
     loadingItem.value = item.id
-    const params: AddToCartParams = {}
-    const response = await addToCart(item.productId, 1, params)
+    const params: AddToCartParams = {
+      productId: item.productId,
+      quantity: 1,
+    }
+    const response = await addToCart(params)
     if (response.data) {
-      const res = response.data as AddToCartRes
+      const res = response.data as CartResponse
       if (res.code === 200) {
         ElMessage.success('添加到购物车成功')
       } else {
         ElMessage.error(res.message || '添加到购物车失败')
       }
+    } else {
+      ElMessage.error('添加到购物车失败')
     }
-  } catch (error) {
-    ElMessage.error('添加到购物车失败')
+  } catch (error: any) {
+    ElMessage.error(error?.message || '添加到购物车失败')
   } finally {
     loadingItem.value = null
   }
@@ -124,7 +129,7 @@ onMounted(() => {
         description="暂无收藏商品" 
       >
         <template #extra>
-          <el-button type="primary" @click="router.push('/products')">
+          <el-button type="primary" @click.passive="router.push('/products')">
             去逛逛
           </el-button>
         </template>
@@ -141,7 +146,7 @@ onMounted(() => {
         >
           <el-card class="favorite-card" shadow="hover">
             <div class="product-content">
-              <div class="product-main" @click="handleViewDetail(item)">
+              <div class="product-main" @click.passive="handleViewDetail(item)">
                 <el-image 
                   :src="item.product.imageUrl || '/default-product.jpg'" 
                   :alt="item.product.name"
@@ -157,10 +162,6 @@ onMounted(() => {
                 <div class="product-info">
                   <div class="product-name">{{ item.product.name }}</div>
                   <div class="product-description">{{ item.product.description }}</div>
-                  <div class="product-meta">
-                    <el-tag size="small" effect="plain">{{ item.product.brand }}</el-tag>
-                    <el-tag size="small" type="info" effect="plain">{{ item.product.model }}</el-tag>
-                  </div>
                 </div>
               </div>
               <div class="product-footer">
@@ -178,7 +179,7 @@ onMounted(() => {
                   <el-button 
                     circle
                     type="danger"
-                    @click.stop="handleRemove(item)"
+                    @click.stop.passive="handleRemove(item)"
                     :loading="loadingItem === item.id"
                   >
                     <el-icon><Delete /></el-icon>
@@ -186,7 +187,7 @@ onMounted(() => {
                   <el-button 
                     circle
                     type="primary" 
-                    @click.stop="handleAddToCart(item)"
+                    @click.stop.passive="handleAddToCart(item)"
                     :loading="loadingItem === item.id"
                     :disabled="item.product.stock <= 0"
                   >
@@ -274,7 +275,7 @@ onMounted(() => {
 
 .product-image {
   width: 100%;
-  aspect-ratio: 1;
+  height: 200px;
   object-fit: cover;
 }
 
@@ -315,12 +316,6 @@ onMounted(() => {
   -webkit-box-orient: vertical;
   overflow: hidden;
   line-height: 1.5;
-}
-
-.product-meta {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .product-footer {

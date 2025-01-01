@@ -29,7 +29,7 @@ public class CartController {
 
     @Operation(summary = "获取购物车列表")
     @GetMapping("/list")
-    public List<CartDTO> getCartList(@RequestHeader("Authorization") String token) {
+    public Result<List<CartDTO>> getCartList(@RequestHeader("Authorization") String token) {
         try {
             String actualToken = token.startsWith("Bearer ") ? token.substring(7) : token;
             Long userId = jwtUtil.getUserIdFromToken(actualToken);
@@ -37,41 +37,89 @@ public class CartController {
             System.out.println("User ID: " + userId);
             
             if (userId == null) {
-                throw new BusinessException("无效的token");
+                return Result.error("无效的token");
             }
 
-            return cartService.getCartList(userId);
+            List<CartDTO> cartList = cartService.getCartList(userId);
+            return Result.success(cartList);
             
         } catch (Exception e) {
             e.printStackTrace();
-            throw new BusinessException("获取购物车列表失败: " + e.getMessage());
+            return Result.error("获取购物车列表失败: " + e.getMessage());
         }
     }
 
     @Operation(summary = "添加商品到购物车")
     @PostMapping("/add")
-    public void addToCart(@RequestParam Long productId, 
+    public Result<?> addToCart(@RequestParam Long productId, 
                          @RequestParam Integer quantity,
                          @RequestHeader("Authorization") String token) {
-        String actualToken = token.startsWith("Bearer ") ? token.substring(7) : token;
-        Long userId = jwtUtil.getUserIdFromToken(actualToken);
-        if (userId == null) {
-            throw new BusinessException("无效的token");
-        }
+        try {
+            String actualToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+            Long userId = jwtUtil.getUserIdFromToken(actualToken);
+            if (userId == null) {
+                return Result.error("无效的token");
+            }
 
-        cartService.addToCart(userId, productId, quantity);
+            cartService.addToCart(userId, productId, quantity);
+            return Result.success("添加成功");
+        } catch (Exception e) {
+            return Result.error("添加失败: " + e.getMessage());
+        }
     }
 
     @Operation(summary = "从购物车删除商品")
     @DeleteMapping("/remove")
-    public void removeFromCart(@RequestParam Long productId,
+    public Result<?> removeFromCart(@RequestParam Long productId,
                              @RequestHeader("Authorization") String token) {
-        String actualToken = token.startsWith("Bearer ") ? token.substring(7) : token;
-        Long userId = jwtUtil.getUserIdFromToken(actualToken);
-        if (userId == null) {
-            throw new BusinessException("无效的token");
-        }
+        try {
+            String actualToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+            Long userId = jwtUtil.getUserIdFromToken(actualToken);
+            if (userId == null) {
+                return Result.error("无效的token");
+            }
 
-        cartService.removeFromCart(userId, productId);
+            cartService.removeFromCart(userId, productId);
+            return Result.success("删除成功");
+        } catch (Exception e) {
+            return Result.error("删除失败: " + e.getMessage());
+        }
+    }
+    
+    @Operation(summary = "更新购物车商品选中状态")
+    @PutMapping("/selected")
+    public Result<?> updateCartItemSelected(
+            @RequestParam Long cartId,
+            @RequestParam Integer selected,
+            @RequestHeader("Authorization") String token) {
+        try {
+            String actualToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+            Long userId = jwtUtil.getUserIdFromToken(actualToken);
+            if (userId == null) {
+                return Result.error("无效的token");
+            }
+
+            cartService.updateCartItemSelected(userId, cartId, selected);
+            return Result.success("更新成功");
+        } catch (Exception e) {
+            return Result.error("更新失败: " + e.getMessage());
+        }
+    }
+    
+    @Operation(summary = "获取选中的购物车商品")
+    @GetMapping("/selected")
+    public Result<List<CartDTO>> getSelectedCartItems(@RequestHeader("Authorization") String token) {
+        try {
+            String actualToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+            Long userId = jwtUtil.getUserIdFromToken(actualToken);
+            if (userId == null) {
+                return Result.error("无效的token");
+            }
+
+            List<CartDTO> selectedItems = cartService.getSelectedCartItems(userId);
+            return Result.success(selectedItems);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
     }
 } 

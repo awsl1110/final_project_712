@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 // 商品信息接口
 export interface Product {
-  id: number | null
+  id: number
   name: string
   description: string
   price: number
@@ -10,11 +10,11 @@ export interface Product {
   categoryId: number
   brand: string
   model: string
-  specifications: string | null
+  specifications: string
   imageUrl: string
   status: number
-  createTime: string | null
-  updateTime: string | null
+  createTime: string
+  updateTime: string
 }
 
 // 收藏商品项接口
@@ -27,7 +27,7 @@ export interface FavoriteItem {
 
 // 收藏商品参数接口
 export interface AddToFavoriteParams {
-  remark?: string
+  productId: number
 }
 
 // 收藏商品响应接口
@@ -52,14 +52,15 @@ export interface GetFavoritesRes {
 
 /** 
  * 获取收藏列表
- * @param {GetFavoritesParams} params 查询参数
- * @returns {Promise<GetFavoritesRes>} 收藏列表
+ * @returns {Promise} 收藏列表
  */
-export function getFavorites(params: GetFavoritesParams = {}): Promise<GetFavoritesRes> {
+export function getFavorites() {
   return request({
     url: '/favorites',
     method: 'get',
-    params
+    headers: {
+      'Authorization': localStorage.getItem('token') || ''
+    }
   })
 }
 
@@ -67,9 +68,9 @@ export function getFavorites(params: GetFavoritesParams = {}): Promise<GetFavori
  * 添加商品到收藏
  * @param {number} productId 商品ID
  * @param {AddToFavoriteParams} params 其他参数
- * @returns {Promise<AddToFavoriteRes>} 添加结果
+ * @returns {Promise} 添加结果
  */
-export function addToFavorite(productId: number, params: AddToFavoriteParams = {}): Promise<AddToFavoriteRes> {
+export function addToFavorite(productId: number, params: AddToFavoriteParams = { productId }) {
   return request({
     url: `/favorites/${productId}`,
     method: 'post',
@@ -80,9 +81,9 @@ export function addToFavorite(productId: number, params: AddToFavoriteParams = {
 /** 
  * 取消收藏商品
  * @param {number} favoriteId 收藏ID
- * @returns {Promise<AddToFavoriteRes>} 取消结果
+ * @returns {Promise} 取消结果
  */
-export function removeFavorite(favoriteId: number): Promise<AddToFavoriteRes> {
+export function removeFavorite(favoriteId: number) {
   return request({
     url: `/favorites/${favoriteId}`,
     method: 'delete'
