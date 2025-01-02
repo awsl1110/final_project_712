@@ -24,7 +24,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     public List<FavoriteDTO> getFavoritesByUserId(long userId) {
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .select(FAVORITE.ALL_COLUMNS)
-                .select(PRODUCT.NAME.as("productName"))
+                .select(PRODUCT.ALL_COLUMNS)
                 .from(FAVORITE)
                 .leftJoin(PRODUCT).on(FAVORITE.PRODUCT_ID.eq(PRODUCT.ID))
                 .where(FAVORITE.USER_ID.eq(userId))

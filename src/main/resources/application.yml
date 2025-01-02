@@ -1,14 +1,10 @@
 spring:
   application:
     name: final_project_712
-  devtools:
-    restart:
-      enabled: false
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.100.1:3306/db_712?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8
     username: db_admin
     password: 12345678
-    url: jdbc:mysql://192.168.100.1:3306/db_712?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8
     hikari:
       pool-name: HikariCP
       idle-timeout: 600000
@@ -33,7 +29,7 @@ spring:
     level:
       root: INFO
       org.springframework.web: WARN
-      com.example.yourpackage: DEBUG
+      com.mybatisflex: DEBUG
     file:
       name: myapplog.log
     pattern:
@@ -42,10 +38,15 @@ spring:
     redis:
       host: 192.168.100.1
       port: 6379
-      username: user712
       password: password
-  session:
-    store-type: none
+      database: 0
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
 server:
   port: 8082
   servlet:
@@ -54,11 +55,7 @@ server:
     multipart:
       max-file-size: 10MB
       max-request-size: 20MB
-mybatis:
-  type-aliases-package: com.example.demo.model
-  mapper-locations: classpath:mapper/*.xml
-  configuration:
-    map-underscore-to-camel-case: true
+
 # springdoc-openapi项配置
 springdoc:
   swagger-ui:
@@ -68,11 +65,10 @@ springdoc:
   api-docs:
     path: /v3/api-docs
     enabled: true
+  cache:
+    disabled: true
   packages-to-scan: _712.final_project_712.controller
-  group-configs:
-    - group: 'default'
-      paths-to-match: '/**'
-      packages-to-scan: _712.final_project_712.controller
+
 # knife4j的增强配置
 knife4j:
   enable: true
@@ -83,24 +79,30 @@ knife4j:
     swagger-model-name: 实体类列表
     enable-version: false
     enable-reload-cache-parameter: false
+    enable-after-script: true
+    enable-filter-multipart-api-method-type: POST
+    enable-filter-multipart-apis: false
+    enable-request-cache: true
   documents:
     - name: 项目文档
       locations: classpath:docs/*
   basic:
     enable: false
+  production: false
+
 jwt:
   secret: 8119E8E2FC8E13E090E85E3C1F7A2F6B8119E8E2FC8E13E090E85E3C1F7A2F6B
   expire: 30
   issuer: zzzlm
+
 headImgPath: "d:/images/headImg"
+
 mybatis-flex:
   mapper-locations: classpath*:/mapper/*.xml
   type-aliases-package: _712.final_project_712.model
   configuration:
     map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     print-banner: false
-  devtools:
-    restart:
-      enabled: false
 

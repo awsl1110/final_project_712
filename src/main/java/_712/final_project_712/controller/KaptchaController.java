@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 @Tag(name = "验证码接口", description = "包含验证码的生成和验证功能")
 @RestController
-@RequestMapping(value = "/kaptcha", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/kaptcha", produces = MediaType.APPLICATION_JSON_VALUE)
 public class KaptchaController {
 
     @Autowired

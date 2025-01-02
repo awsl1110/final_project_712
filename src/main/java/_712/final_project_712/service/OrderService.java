@@ -9,4 +9,9 @@ public interface OrderService {
     OrderDTO.OrderInfo getOrderDetail(Long orderId);
     boolean updateOrderStatus(Long orderId, Integer status);
     boolean deleteOrder(Long orderId);
+    
+    /**
+     * 创建订单
+     */
+    OrderDTO.OrderInfo createOrder(Long userId, OrderDTO.CreateOrderRequest request);
 } 

@@ -24,7 +24,7 @@ import static _712.final_project_712.model.table.AvatarTableDef.AVATAR;
 
 @Slf4j
 @RestController
-@RequestMapping("/file")
+@RequestMapping("/api/file")
 @Tag(name = "文件上传接口", description = "处理文件上传相关的接口")
 public class FileController {
 
@@ -52,9 +52,18 @@ public class FileController {
             if (file == null || file.isEmpty()) {
                 return Result.error(400, "请选择要上传的文件");
             }
+
+            // 检查文件类型
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.toLowerCase().startsWith("image/")) {
+                return Result.error(400, "只支持图片文件上传");
+            }
             
             String fileUrl = fileService.saveAvatar(file, userId);
             return Result.success(fileUrl);
+        } catch (IllegalArgumentException e) {
+            log.warn("文件上传参数错误", e);
+            return Result.error(400, e.getMessage());
         } catch (Exception e) {
             log.error("头像上传失败", e);
             return Result.error(500, "头像上传失败：" + e.getMessage());

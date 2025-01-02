@@ -22,6 +22,10 @@
           <el-icon><List /></el-icon>
           <span>我的订单</span>
         </el-menu-item>
+        <el-menu-item index="/favorites">
+          <el-icon><Star /></el-icon>
+          <span>我的收藏</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     
@@ -36,13 +40,14 @@
                 :src="userStore.avatarUrl"
                 @error="() => true"
               >
-                {{ userStore.username?.charAt(0)?.toUpperCase() }}
+                {{ userStore.userProfile?.name?.charAt(0)?.toUpperCase() }}
               </el-avatar>
-              <span class="username">{{ userStore.username }}</span>
+              <span class="username">{{ userStore.userProfile?.name }}</span>
               <el-icon class="el-icon--right"><arrow-down /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
+                <el-dropdown-item command="profile">个人信息</el-dropdown-item>
                 <el-dropdown-item command="upload">上传头像</el-dropdown-item>
                 <el-dropdown-item command="password">修改密码</el-dropdown-item>
                 <el-dropdown-item command="logout">退出登录</el-dropdown-item>
@@ -71,7 +76,7 @@
 import { ref, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { Monitor, ArrowDown, Goods, ShoppingCart, List } from '@element-plus/icons-vue'
+import { Monitor, ArrowDown, Goods, ShoppingCart, List, Star } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()
@@ -106,18 +111,21 @@ onMounted(() => {
   }
 })
 
-const handleCommand = async (command: string) => {
-  try {
-    if (command === 'logout') {
+const handleCommand = (command: string) => {
+  switch (command) {
+    case 'profile':
+      router.push('/profile')
+      break
+    case 'upload':
+      fileInput.value?.click()
+      break
+    case 'password':
+      router.push('/password')
+      break
+    case 'logout':
       userStore.logout()
       router.push('/login')
-    } else if (command === 'password') {
-      router.push('/password')
-    } else if (command === 'upload') {
-      fileInput.value?.click()
-    }
-  } catch (error) {
-    console.error('操作失败:', error)
+      break
   }
 }
 

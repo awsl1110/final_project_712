@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "用户信息管理", description = "用户信息相关接口")
 @RestController
-@RequestMapping("/user/profile")
+@RequestMapping("/api/user/profile")
 public class UserProfileController {
     
     @Autowired

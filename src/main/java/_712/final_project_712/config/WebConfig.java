@@ -19,20 +19,33 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
-                .addPathPatterns("/file/**", "/favorite/**", "/order/**", "/review/**")
+                .addPathPatterns(
+                        "/api/file/**", 
+                        "/api/favorite/**", 
+                        "/api/order/**", 
+                        "/api/review/**",
+                        "/api/address/**",
+                        "/api/pickup/**",
+                        "/api/return-orders/**",
+                        "/api/sales/**",
+                        "/api/user/profile/**",
+                        "/api/activity/participate/**"
+                )
                 .excludePathPatterns(
-                        "/file/avatar/*/view/**",
-                        "/kaptcha/**",
-                        "/user/login",
-                        "/user/register",
-                        "/email/captcha/**",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
-                        "/product/**",
-                        "/review/list",
-                        "/review/*/detail"
+                        "/api/product/**",
+                        "/api/review/list",
+                        "/api/review/*/detail",
+                        "/api/file/avatar/*/view/**",
+                        "/api/kaptcha/**",
+                        "/api/user/login",
+                        "/api/user/register",
+                        "/api/email/captcha/**",
+                        "/api/activity/ongoing",
+                        "/api/activity/upcoming",
+                        "/api/activity/{id}"
                 );
-
         registry.addInterceptor(supplierTokenInterceptor)
                 .addPathPatterns("/supplier/**");
     }

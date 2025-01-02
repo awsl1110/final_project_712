@@ -22,4 +22,10 @@ public interface ProductMapper extends BaseMapper<Product> {
             "WHERE p.status = 1 " +
             "ORDER BY p.create_time DESC")
     List<ProductDTO> findAllProducts();
+
+    @Select("SELECT p.*, pc.name as category_name " +
+            "FROM product p " +
+            "LEFT JOIN product_category pc ON p.category_id = pc.id " +
+            "WHERE p.id = #{productId}")
+    ProductDTO findById(Long productId);
 } 

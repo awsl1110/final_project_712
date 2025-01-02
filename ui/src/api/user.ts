@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import type { UserLoginParams, UserRegisterParams, Result, LoginResponse, UpdatePasswordParams } from '@/types/api'
+import type { UserLoginParams, UserRegisterParams, Result, LoginResponse, UpdatePasswordParams, UserProfile } from '@/types/api'
 
 export const userApi = {
   login(data: UserLoginParams) {
@@ -76,5 +76,9 @@ export const userApi = {
         }
       }
     })
+  },
+
+  getProfile() {
+    return request.get<Result<UserProfile>>('/user/profile')
   }
 } 

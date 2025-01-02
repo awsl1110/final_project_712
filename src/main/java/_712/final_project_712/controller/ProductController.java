@@ -14,7 +14,7 @@ import java.util.List;
 
 @Tag(name = "商品查询", description = "商品相关接口")
 @RestController
-@RequestMapping("/product")
+@RequestMapping("/api/product")
 public class ProductController {
 
     @Autowired
@@ -57,6 +57,19 @@ public class ProductController {
             return Result.success(categories);
         } catch (Exception e) {
             return Result.error("获取分类列表失败：" + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "获取商品详情")
+    @GetMapping("/{productId}")
+    public Result<ProductDTO> getProductById(
+            @Parameter(description = "商品ID") 
+            @PathVariable Long productId) {
+        try {
+            ProductDTO product = productService.getProductById(productId);
+            return Result.success(product);
+        } catch (Exception e) {
+            return Result.error("获取商品详情失败：" + e.getMessage());
         }
     }
 } 

@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 @Tag(name = "邮箱验证码", description = "邮箱验证码的发送接口")
 @RestController
-@RequestMapping("/email")
+@RequestMapping("/api/email")
 public class EmailCaptchaController {
 
     @Autowired
@@ -33,6 +33,11 @@ public class EmailCaptchaController {
     public ResponseEntity<String> sendEmailCaptcha(
             @Parameter(description = "邮箱地址") @RequestParam String email) {
         try {
+            // 验证邮箱格式
+            if (email == null || email.isEmpty() || !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                return ResponseEntity.badRequest().body("验证码发送失败：无效的邮箱地址");
+            }
+
             // 生成6位随机验证码
             String captcha = generateCaptcha();
             
