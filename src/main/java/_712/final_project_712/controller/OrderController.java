@@ -13,7 +13,7 @@ import java.util.List;
 
 @Tag(name = "订单管理", description = "订单相关接口")
 @RestController
-@RequestMapping("/order")
+@RequestMapping("/api/order")
 public class OrderController {
 
     @Autowired
@@ -22,12 +22,37 @@ public class OrderController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Operation(summary = "获取订单列表")
+    @Operation(summary = "获取用户订单列表")
     @GetMapping("/list")
-    public Result<List<OrderDTO.OrderInfo>> getOrderList() {
+    public Result<List<OrderDTO.OrderInfo>> getUserOrders(
+            @Parameter(description = "用户认证token", required = true)
+            @RequestHeader("Authorization") String token) {
         try {
-            List<OrderDTO.OrderInfo> orders = orderService.getAllOrders();
+            // 从token中获取用户ID
+            Long userId = jwtUtil.getUserIdFromToken(token);
+            List<OrderDTO.OrderInfo> orders = orderService.getUserOrders(userId);
             return Result.success(orders);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @Operation(summary = "创建订单")
+    @PostMapping("/create")
+    public Result<OrderDTO.OrderInfo> createOrder(
+            @Parameter(description = "用户认证token", required = true)
+            @RequestHeader("Authorization") String token,
+            @Parameter(description = "创建订单请求", required = true)
+            @RequestBody OrderDTO.CreateOrderRequest request) {
+        try {
+            String actualToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+            Long userId = jwtUtil.getUserIdFromToken(actualToken);
+            if (userId == null) {
+                return Result.error("无效的token");
+            }
+            
+            OrderDTO.OrderInfo order = orderService.createOrder(userId, request);
+            return Result.success(order);
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }

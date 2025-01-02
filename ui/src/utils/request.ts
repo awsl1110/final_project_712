@@ -48,7 +48,10 @@ request.interceptors.response.use(
       return response
     }
     
-    const res = response.data as Result
+    const res = response.data as Result<any>
+    // 打印响应数据，用于调试
+    console.log('Response data:', res)
+    
     if (res.code !== 200) {
       const errorMsg = res.message || '操作失败'
       ElMessage.error(errorMsg)
@@ -57,6 +60,7 @@ request.interceptors.response.use(
     return response
   },
   error => {
+    console.log('Error response:', error.response)
     if (error.response) {
       const { status, data } = error.response
       if (status === 401 || (data?.code === 500 && data?.message?.includes('token'))) {
@@ -73,7 +77,10 @@ request.interceptors.response.use(
           errorMsg = data
         } else if (data?.message) {
           errorMsg = data.message
+        } else if (data?.error) {
+          errorMsg = data.error
         }
+        console.log('Error message:', errorMsg)
         ElMessage.error(errorMsg)
       }
     } else if (error.code === 'ECONNABORTED') {

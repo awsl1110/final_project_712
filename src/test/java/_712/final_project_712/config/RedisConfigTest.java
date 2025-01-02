@@ -1,5 +1,7 @@
 package _712.final_project_712.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,33 +51,20 @@ public class RedisConfigTest {
 }
 
 // 用于测试的简单用户类
+@Setter
+@Getter
 class TestUser {
+    // getter和setter方法
     private String name;
     private int age;
-    
+
     // 必须有无参构造函数，因为JSON序列化需要
     public TestUser() {
     }
-    
+
     public TestUser(String name, int age) {
         this.name = name;
         this.age = age;
     }
-    
-    // getter和setter方法
-    public String getName() {
-        return name;
-    }
-    
-    public void setName(String name) {
-        this.name = name;
-    }
-    
-    public int getAge() {
-        return age;
-    }
-    
-    public void setAge(int age) {
-        this.age = age;
-    }
-} 
+
+}

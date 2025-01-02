@@ -75,7 +75,7 @@ public class ProductControllerTest {
 
     @Test
     void testGetProductsByCategory() throws Exception {
-        mockMvc.perform(get("/product/category/1"))
+        mockMvc.perform(get("/api/product/category/1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
@@ -86,7 +86,7 @@ public class ProductControllerTest {
         when(productService.getProductsByCategory(-1L))
                 .thenThrow(new IllegalArgumentException("无效的分类ID"));
 
-        mockMvc.perform(get("/product/category/-1"))
+        mockMvc.perform(get("/api/product/category/-1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(500))
@@ -95,7 +95,7 @@ public class ProductControllerTest {
 
     @Test
     void testGetAllCategories() throws Exception {
-        mockMvc.perform(get("/product/categories"))
+        mockMvc.perform(get("/api/product/categories"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
@@ -105,7 +105,7 @@ public class ProductControllerTest {
         when(categoryService.getAllCategories())
                 .thenThrow(new RuntimeException("测试异常"));
 
-        mockMvc.perform(get("/product/categories"))
+        mockMvc.perform(get("/api/product/categories"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(500))

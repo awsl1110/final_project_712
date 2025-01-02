@@ -2,69 +2,100 @@ package _712.final_project_712.controller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Set;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc
-public class EmailCaptchaControllerTest {
+class EmailCaptchaControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @InjectMocks
+    private EmailCaptchaController emailCaptchaController;
 
-    @MockBean
+    @Mock
     private JavaMailSender mailSender;
 
-    @Autowired
+    @Mock
     private StringRedisTemplate redisTemplate;
+
+    @Mock
+    private ValueOperations<String, String> valueOperations;
+
+    private final String testEmail = "test@example.com";
+    private final String fromEmail = "noreply@example.com";
 
     @BeforeEach
     void setUp() {
-        // 配置JavaMailSender的Mock行为
-        doNothing().when(mailSender).send(any(SimpleMailMessage.class));
+        // 设置fromEmail
+        ReflectionTestUtils.setField(emailCaptchaController, "fromEmail", fromEmail);
         
-        // 清理所有与验证码相关的键
-        Set<String> keys = redisTemplate.keys("email:captcha:*");
-        if (keys != null && !keys.isEmpty()) {
-            redisTemplate.delete(keys);
-        }
+        // 设置Redis模拟
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     }
 
     @Test
-    void testSendEmailCaptcha() throws Exception {
-        // 测试发送验证码
-        String testEmail = "test@example.com";
+    void sendEmailCaptcha_Success() {
+        // 准备测试数据
+        doNothing().when(mailSender).send(any(SimpleMailMessage.class));
+        doNothing().when(valueOperations).set(anyString(), anyString(), anyLong(), any());
+
+        // 执行测试
+        ResponseEntity<String> response = emailCaptchaController.sendEmailCaptcha(testEmail);
+
+        // 验证结果
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("验证码已发送", response.getBody());
+
+        // 验证邮件发送
+        verify(mailSender, times(1)).send(any(SimpleMailMessage.class));
         
-        MvcResult result = mockMvc.perform(post("/api/email/captcha/send")
-                .param("email", testEmail))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn();
+        // 验证Redis存储
+        verify(valueOperations, times(1)).set(
+            matches("email:captcha:" + testEmail),
+            matches("\\d{6}"),
+            eq(5L),
+            any()
+        );
+    }
 
-        // 验证响应内容
-        String content = result.getResponse().getContentAsString();
-        assertEquals("验证码已发送", content);
+    @Test
+    void sendEmailCaptcha_MailSenderException() {
+        // 模拟邮件发送异常
+        doThrow(new RuntimeException("邮件发送失败")).when(mailSender).send(any(SimpleMailMessage.class));
 
-        // 验证Redis中是否存储了验证码
-        String key = "email:captcha:" + testEmail;
-        String captcha = redisTemplate.opsForValue().get(key);
-        assertNotNull(captcha);
-        assertEquals(6, captcha.length());
+        // 执行测试
+        ResponseEntity<String> response = emailCaptchaController.sendEmailCaptcha(testEmail);
+
+        // 验证结果
+        assertEquals(400, response.getStatusCode().value());
+        assertTrue(response.getBody().contains("验证码发送失败"));
+        
+        // 验证没有进行Redis存储
+        verify(valueOperations, never()).set(anyString(), anyString(), anyLong(), any());
+    }
+
+    @Test
+    void sendEmailCaptcha_InvalidEmail() {
+        // 执行测试 - 使用无效的邮箱地址
+        ResponseEntity<String> response = emailCaptchaController.sendEmailCaptcha("");
+
+        // 验证结果
+        assertEquals(400, response.getStatusCode().value());
+        assertTrue(response.getBody().contains("验证码发送失败"));
+        
+        // 验证没有发送邮件和存储Redis
+        verify(mailSender, never()).send(any(SimpleMailMessage.class));
+        verify(valueOperations, never()).set(anyString(), anyString(), anyLong(), any());
     }
 } 

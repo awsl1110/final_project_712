@@ -14,7 +14,7 @@ import java.util.List;
 
 @Tag(name = "供应商管理")
 @RestController
-@RequestMapping("/supplier")
+@RequestMapping("/api/supplier")
 public class SupplierController {
 
     @Autowired

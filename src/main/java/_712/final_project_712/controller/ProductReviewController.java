@@ -22,7 +22,7 @@ import java.util.List;
 
 @Tag(name = "商品评价管理", description = "商品评价相关接口")
 @RestController
-@RequestMapping("/review")
+@RequestMapping("/api/review")
 public class ProductReviewController {
 
     @Autowired
