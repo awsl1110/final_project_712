@@ -5,10 +5,11 @@ import { createOrder } from '@/api/order'
 import type { CartItem, CartResponse, CartListRes } from '@/api/cart'
 import type { Result } from '@/types/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Minus, Delete } from '@element-plus/icons-vue'
+import { Plus, Minus, Delete, Ticket, ArrowDown } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { addressApi } from '@/api/address'
-import type { Address } from '@/types/api'
+import type { Address, UserCoupon } from '@/types/api'
+import { getCoupons, getUserCoupons } from '@/api/coupon'
 
 const router = useRouter()
 const cartItems = ref<CartItem[]>([])
@@ -19,6 +20,9 @@ const remark = ref('')
 const showAddressDialog = ref(false)
 const addresses = ref<Address[]>([])
 const addressLoading = ref(false)
+const userCouponId = ref<number>(0)
+const userCoupons = ref<UserCoupon[]>([])
+const couponLoading = ref(false)
 
 // 计算总价
 const totalPrice = computed(() => {
@@ -143,6 +147,22 @@ const fetchAddresses = async () => {
   }
 }
 
+// 获取用户优惠券列表
+const fetchUserCoupons = async () => {
+  try {
+    couponLoading.value = true
+    const response = await getUserCoupons()
+    if (response.data.code === 200) {
+      // 只获取未使用的优惠券
+      userCoupons.value = response.data.data.filter(uc => uc.status === 0)
+    }
+  } catch (error) {
+    ElMessage.error('获取优惠券列表失败')
+  } finally {
+    couponLoading.value = false
+  }
+}
+
 // 处理结算按钮点击
 const handleCheckoutClick = () => {
   const selectedItems = cartItems.value.filter(item => item.selected === 1)
@@ -151,8 +171,9 @@ const handleCheckoutClick = () => {
     return
   }
   showAddressDialog.value = true
-  // 打开对话框时获取地址列表
+  // 打开对话框时获取地址列表和优惠券列表
   fetchAddresses()
+  fetchUserCoupons()
 }
 
 // 处理提交订单
@@ -168,7 +189,8 @@ const handleSubmitOrder = async () => {
     const createOrderRequest = {
       cartIds: selectedItems.map(item => item.id),
       addressId: addressId.value,
-      remark: remark.value || ''  // 确保remark不为undefined
+      remark: remark.value || '',  // 确保remark不为undefined
+      userCouponId: userCouponId.value || undefined  // 添加优惠券ID
     }
 
     const token = localStorage.getItem('token')
@@ -325,6 +347,79 @@ onMounted(() => {
               placeholder="请输入订单备注（选填）"
             />
           </el-form-item>
+          <el-form-item label="优惠券">
+            <div v-loading="couponLoading">
+              <el-popover
+                placement="bottom-start"
+                :width="400"
+                trigger="click"
+                popper-class="coupon-popover"
+              >
+                <template #reference>
+                  <el-input
+                    readonly
+                    :placeholder="userCouponId === 0 ? '不使用优惠券' : userCoupons.find(c => c.id === userCouponId)?.coupon.name || '请选择优惠券'"
+                    :suffix-icon="ArrowDown"
+                    style="width: 100%"
+                  />
+                </template>
+
+                <div style="max-height: 300px; overflow-y: auto">
+                  <el-radio-group v-model="userCouponId" style="width: 100%">
+                    <div style="padding: 8px 0">
+                      <el-radio :label="0" style="width: 100%; margin: 0; padding: 8px 16px">
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%">
+                          <span>不使用优惠券</span>
+                          <span style="color: var(--el-text-color-secondary)">按原价支付</span>
+                        </div>
+                      </el-radio>
+                    </div>
+
+                    <div v-for="userCoupon in userCoupons" :key="userCoupon.id" style="padding: 4px 0">
+                      <el-radio
+                        :label="userCoupon.id"
+                        :disabled="userCoupon.coupon.minAmount > totalPrice"
+                        style="width: 100%; margin: 0; padding: 8px 16px"
+                      >
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%">
+                          <div style="display: flex; align-items: center; gap: 12px">
+                            <span style="color: var(--el-color-danger); font-size: 16px; font-weight: bold; min-width: 80px">
+                              <template v-if="userCoupon.coupon.type === 1">
+                                ¥{{ userCoupon.coupon.value }}
+                              </template>
+                              <template v-else>
+                                {{ userCoupon.coupon.value }}折
+                              </template>
+                            </span>
+                            <div style="display: flex; flex-direction: column; gap: 4px">
+                              <span>{{ userCoupon.coupon.name }}</span>
+                              <span style="color: var(--el-text-color-secondary); font-size: 12px">
+                                满{{ userCoupon.coupon.minAmount }}元可用
+                              </span>
+                            </div>
+                          </div>
+                          <span style="color: var(--el-text-color-secondary); font-size: 12px">
+                            有效期至：{{ userCoupon.coupon.endTime }}
+                          </span>
+                        </div>
+                      </el-radio>
+                    </div>
+                  </el-radio-group>
+
+                  <el-empty 
+                    v-if="userCoupons.length === 0" 
+                    description="暂无可用优惠券"
+                  >
+                    <template #image>
+                      <el-icon :size="60">
+                        <Ticket />
+                      </el-icon>
+                    </template>
+                  </el-empty>
+                </div>
+              </el-popover>
+            </div>
+          </el-form-item>
         </el-form>
       </div>
       <template #footer>
@@ -344,155 +439,5 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.cart-container {
-  padding: 20px;
-}
 
-.page-header {
-  margin-bottom: 20px;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.title {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.cart-content {
-  min-height: 200px;
-}
-
-.cart-item {
-  margin-bottom: 16px;
-}
-
-.item-content {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.item-info {
-  flex: 1;
-}
-
-.item-name {
-  margin: 0;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.item-price {
-  margin-top: 8px;
-  color: #f56c6c;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.item-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.cart-footer {
-  margin-top: 20px;
-}
-
-.footer-content {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 20px;
-}
-
-.total-price {
-  font-size: 16px;
-}
-
-.total-price .price {
-  color: #f56c6c;
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.price {
-  color: #f56c6c;
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.address-form {
-  padding: 20px;
-}
-
-.address-actions {
-  margin-top: 8px;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.address-list {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.address-item {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #DCDFE6;
-  border-radius: 4px;
-  margin: 0;
-  height: auto;
-}
-
-.address-item.is-checked {
-  border-color: var(--el-color-primary);
-}
-
-.address-info {
-  margin-left: 8px;
-}
-
-.address-header {
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.receiver {
-  font-weight: bold;
-}
-
-.phone {
-  color: #606266;
-}
-
-.address-content {
-  color: #606266;
-  line-height: 1.5;
-}
-
-.address-actions {
-  margin-top: 12px;
-  text-align: right;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
 </style> 

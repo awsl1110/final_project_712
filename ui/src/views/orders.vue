@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getOrders, cancelOrder, deleteOrder } from '@/api/order'
-import type { Order } from '@/api/order'
+import type { OrderInfo } from '@/api/order'
 import type { Result } from '@/types/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete } from '@element-plus/icons-vue'
+import { Delete, Document } from '@element-plus/icons-vue'
 
-const orders = ref<Order[]>([])
+const router = useRouter()
+const orders = ref<OrderInfo[]>([])
 const loading = ref(true)
 
 // 获取订单列表
@@ -14,21 +16,23 @@ const fetchOrders = async () => {
   try {
     loading.value = true
     const response = await getOrders()
-    const res = response.data as Result<Order[]>
-    if (res.code === 200) {
-      orders.value = res.data
+    if (response.data.code === 200) {
+      orders.value = response.data.data
+    } else if (response.data.code === 500) {
+      ElMessage.error('服务器内部错误')
     } else {
-      ElMessage.error(res.message || '获取订单列表失败')
+      ElMessage.error(response.data.message || '获取订单列表失败')
     }
   } catch (error) {
-    ElMessage.error('获取订单列表失败')
+    console.error('获取订单列表失败:', error)
+    ElMessage.error('网络错误，请稍后重试')
   } finally {
     loading.value = false
   }
 }
 
 // 取消订单
-const handleCancel = async (order: Order) => {
+const handleCancel = async (order: OrderInfo) => {
   try {
     await ElMessageBox.confirm('确定要取消这个订单吗？', '提示', {
       confirmButtonText: '确定',
@@ -39,7 +43,7 @@ const handleCancel = async (order: Order) => {
     const response = await cancelOrder(order.id)
     const res = response.data as Result<any>
     if (res.code === 200) {
-      order.status = 4 // 假设4是已取消状态
+      order.status = 4 // 已取消状态
       ElMessage.success('订单已取消')
     } else {
       ElMessage.error(res.message || '取消订单失败')
@@ -52,7 +56,7 @@ const handleCancel = async (order: Order) => {
 }
 
 // 删除订单
-const handleDelete = async (order: Order) => {
+const handleDelete = async (order: OrderInfo) => {
   try {
     await ElMessageBox.confirm('确定要删除这个订单吗？', '提示', {
       confirmButtonText: '确定',
@@ -61,12 +65,11 @@ const handleDelete = async (order: Order) => {
     })
     
     const response = await deleteOrder(order.id)
-    const res = response.data as Result<any>
-    if (res.code === 200) {
+    if (response.code === 200) {
       orders.value = orders.value.filter(o => o.id !== order.id)
       ElMessage.success('删除成功')
     } else {
-      ElMessage.error(res.message || '删除失败')
+      ElMessage.error(response.message || '删除失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
@@ -96,6 +99,11 @@ const formatPrice = (price: number | null | undefined) => {
   })
 }
 
+// 查看订单详情
+const handleViewDetail = (orderId: number) => {
+  router.push(`/order/${orderId}`)
+}
+
 onMounted(() => {
   fetchOrders()
 })
@@ -123,7 +131,7 @@ onMounted(() => {
                 <span class="order-time">下单时间：{{ order.createTime }}</span>
               </div>
               <div class="order-status">
-                <el-tag :type="order.status === 4 ? 'info' : 'success'">
+                <el-tag :type="order.status === 4 ? 'info' : order.status === 0 ? 'warning' : 'success'">
                   {{ getStatusText(order.status) }}
                 </el-tag>
               </div>
@@ -151,7 +159,11 @@ onMounted(() => {
           
           <div class="order-footer">
             <div class="order-total">
-              总计：<span class="total-amount">{{ formatPrice(order.totalAmount) }}</span>
+              <div class="amount-detail">
+                <p>商品总额：{{ formatPrice(order.totalAmount) }}</p>
+                <p v-if="order.discountAmount > 0">优惠金额：-{{ formatPrice(order.discountAmount) }}</p>
+                <p class="final-amount">实付金额：{{ formatPrice(order.payAmount) }}</p>
+              </div>
             </div>
             <div class="order-actions">
               <el-button 
@@ -168,6 +180,14 @@ onMounted(() => {
                 @click="handleCancel(order)"
               >
                 取消订单
+              </el-button>
+              <el-button
+                type="info"
+                size="small"
+                :icon="Document"
+                @click="handleViewDetail(order.id)"
+              >
+                订单详情
               </el-button>
               <el-button 
                 type="danger"
@@ -257,7 +277,7 @@ onMounted(() => {
 .item-name {
   margin: 0 0 10px;
   font-size: 16px;
-  font-weight: bold;
+  color: #333;
 }
 
 .item-price {
@@ -274,24 +294,30 @@ onMounted(() => {
 .order-footer {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   margin-top: 20px;
   padding-top: 20px;
   border-top: 1px solid #eee;
 }
 
-.order-total {
-  font-size: 16px;
+.amount-detail {
+  text-align: right;
 }
 
-.total-amount {
+.amount-detail p {
+  margin: 5px 0;
+  color: #666;
+}
+
+.final-amount {
   color: #f56c6c;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: bold;
 }
 
 .order-actions {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 </style> 

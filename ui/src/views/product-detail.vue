@@ -5,10 +5,12 @@ import { getProductDetail } from '@/api/product'
 import { addToCart } from '@/api/cart'
 import { addToFavorite } from '@/api/favorite'
 import type { Product } from '@/api/product'
+import type { Result } from '@/types/api'
 import type { AddToCartParams, CartResponse } from '@/api/cart'
 import type { AddToFavoriteParams, AddToFavoriteRes } from '@/api/favorite'
 import { ElMessage, ElInputNumber } from 'element-plus'
 import { ShoppingCart, Star } from '@element-plus/icons-vue'
+import ProductReviews from '@/components/ProductReviews.vue'
 
 const route = useRoute()
 const loading = ref(true)
@@ -62,7 +64,9 @@ const handleAddToCart = async () => {
 const handleAddToFavorite = async () => {
   if (!product.value) return
   try {
-    const params: AddToFavoriteParams = {}
+    const params: AddToFavoriteParams = {
+      productId: product.value.id!
+    }
     const response = await addToFavorite(product.value.id!, params)
     if (response.data) {
       const res = response.data as AddToFavoriteRes
@@ -176,6 +180,12 @@ onMounted(() => {
     </el-card>
     
     <el-empty v-else description="商品不存在" />
+
+    <!-- 商品评价组件 -->
+    <ProductReviews
+      v-if="product"
+      :product-id="Number(route.params.id)"
+    />
   </div>
 </template>
 
@@ -292,5 +302,10 @@ onMounted(() => {
 
 .action-buttons .el-button {
   flex: 1;
+}
+
+/* 添加评价组件样式 */
+:deep(.product-reviews) {
+  margin-top: 20px;
 }
 </style> 

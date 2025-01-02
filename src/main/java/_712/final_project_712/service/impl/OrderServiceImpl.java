@@ -13,6 +13,7 @@ import _712.final_project_712.model.dto.CartDTO;
 import _712.final_project_712.model.dto.OrderDTO;
 import _712.final_project_712.service.CartService;
 import _712.final_project_712.service.OrderService;
+import _712.final_project_712.service.UserCouponService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private UserAddressMapper userAddressMapper;
+
+    @Autowired
+    private UserCouponService userCouponService;
 
     @Override
     public List<OrderDTO.OrderInfo> getUserOrders(Long userId) {
@@ -133,6 +137,8 @@ public class OrderServiceImpl implements OrderService {
             Orders order = new Orders();
             order.setUserId(userId);
             order.setTotalAmount(totalAmount);
+            order.setDiscountAmount(BigDecimal.ZERO);  // 默认无优惠
+            order.setPayAmount(totalAmount);  // 默认实付金额等于总金额
             order.setStatus(0);  // 0-待支付
             order.setReceiverName(address.getReceiverName());
             order.setReceiverPhone(address.getReceiverPhone());
@@ -144,15 +150,29 @@ public class OrderServiceImpl implements OrderService {
             order.setRemark(request.getRemark());
             order.setCreateTime(LocalDateTime.now());
             order.setUpdateTime(LocalDateTime.now());
+
+            // 5. 处理优惠券
+            if (request.getUserCouponId() != null) {
+                // 使用优惠券并获取优惠后的金额
+                BigDecimal discountedAmount = userCouponService.useCoupon(
+                    request.getUserCouponId(), 
+                    order.getId(), 
+                    totalAmount
+                );
+                BigDecimal discountAmount = totalAmount.subtract(discountedAmount);
+                order.setDiscountAmount(discountAmount);
+                order.setPayAmount(discountedAmount);
+                order.setUserCouponId(request.getUserCouponId());
+            }
             
-            // 插入订单并获取自动生成的主键
+            // 6. 插入订单并获取自动生成的主键
             orderMapper.insert(order);
             
             if (order.getId() == null) {
                 throw new BusinessException("创建订单失败：无法获取订单ID");
             }
             
-            // 5. 创建订单商品项
+            // 7. 创建订单商品项
             for (CartDTO item : selectedItems) {
                 // 获取最新的商品信息
                 Product product = productMapper.selectOneById(item.getProductId());
@@ -173,18 +193,18 @@ public class OrderServiceImpl implements OrderService {
                         .multiply(new BigDecimal(item.getQuantity())));
                 orderItemMapper.insert(orderItem);
                 
-                // 6. 更新商品库存
+                // 8. 更新商品库存
                 product.setStock(product.getStock() - item.getQuantity());
                 productMapper.update(product);
             }
             
-            // 7. 清空已结算的购物车商品
+            // 9. 清空已结算的购物车商品
             List<Long> cartIds = selectedItems.stream()
                     .map(CartDTO::getId)
                     .collect(Collectors.toList());
             cartService.clearSettledItems(cartIds);
             
-            // 8. 返回订单信息
+            // 10. 返回订单信息
             return getOrderDetail(order.getId());
             
         } catch (Exception e) {

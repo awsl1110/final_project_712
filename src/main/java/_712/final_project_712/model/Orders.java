@@ -20,6 +20,12 @@ public class Orders {
     
     private BigDecimal totalAmount;
     
+    private BigDecimal discountAmount;
+    
+    private BigDecimal payAmount;
+    
+    private Long userCouponId;
+    
     private Integer status;
     
     private String address;

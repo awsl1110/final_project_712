@@ -1,14 +1,45 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import type { OrderInfo } from '@/api/order'
+import { useRoute } from 'vue-router'
 import { getOrderDetail } from '@/api/order'
+import type { OrderInfo } from '@/api/order'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
-const router = useRouter()
-const loading = ref(true)
 const order = ref<OrderInfo | null>(null)
+const loading = ref(true)
+
+// 获取订单详情
+const fetchOrderDetail = async () => {
+  const orderId = Number(route.params.id)
+  if (!orderId) {
+    ElMessage.error('订单ID无效')
+    return
+  }
+
+  try {
+    loading.value = true
+    const response = await getOrderDetail(orderId)
+    if (response.data.code === 200) {
+      order.value = response.data.data
+    } else if (response.data.code === 500) {
+      ElMessage.error('服务器内部错误')
+    } else {
+      ElMessage.error(response.data.message || '获取订单详情失败')
+    }
+  } catch (error) {
+    console.error('获取订单详情失败:', error)
+    ElMessage.error('网络错误，请稍后重试')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 格式化价格
+const formatPrice = (price: number | null | undefined) => {
+  if (price == null) return '¥0.00'
+  return `¥${price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`
+}
 
 // 获取订单状态文本
 const getStatusText = (status: number) => {
@@ -20,42 +51,6 @@ const getStatusText = (status: number) => {
     4: '已取消'
   }
   return statusMap[status] || '未知状态'
-}
-
-// 格式化价格
-const formatPrice = (price: number | null | undefined) => {
-  if (price == null) return '¥0.00'
-  return price.toLocaleString('zh-CN', {
-    style: 'currency',
-    currency: 'CNY'
-  })
-}
-
-// 获取订单详情
-const fetchOrderDetail = async () => {
-  try {
-    loading.value = true
-    const orderId = Number(route.params.id)
-    if (isNaN(orderId)) {
-      ElMessage.error('无效的订单ID')
-      router.push('/orders')
-      return
-    }
-
-    const response = await getOrderDetail(orderId)
-    if (response.data.code === 200) {
-      order.value = response.data.data
-    } else {
-      ElMessage.error(response.data.message || '获取订单详情失败')
-      router.push('/orders')
-    }
-  } catch (error: any) {
-    console.error('获取订单详情失败:', error)
-    ElMessage.error(error.response?.data?.message || '获取订单详情失败')
-    router.push('/orders')
-  } finally {
-    loading.value = false
-  }
 }
 
 onMounted(() => {
@@ -73,65 +68,95 @@ onMounted(() => {
       </template>
     </el-card>
 
-    <div class="order-content" v-loading="loading">
+    <div v-loading="loading">
       <el-empty v-if="!order" description="订单不存在" />
       
       <template v-else>
-        <el-card class="order-card">
+        <el-card class="order-info">
           <template #header>
-            <div class="order-header">
-              <div class="order-info">
-                <span class="order-number">订单号：{{ order.id }}</span>
-                <span class="order-time">下单时间：{{ order.createTime }}</span>
-              </div>
-              <div class="order-status">
-                <el-tag :type="order.status === 4 ? 'info' : 'success'">
-                  {{ getStatusText(order.status) }}
-                </el-tag>
-              </div>
+            <div class="section-header">
+              <span class="section-title">订单信息</span>
+              <el-tag :type="order.status === 4 ? 'info' : order.status === 0 ? 'warning' : 'success'">
+                {{ getStatusText(order.status) }}
+              </el-tag>
             </div>
           </template>
           
-          <div class="order-section">
-            <h3>收货信息</h3>
-            <div class="delivery-info">
-              <p><span class="label">收货人：</span>{{ order.receiverName }}</p>
-              <p><span class="label">联系电话：</span>{{ order.receiverPhone }}</p>
-              <p><span class="label">收货地址：</span>{{ order.address }}</p>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">订单编号：</span>
+              <span class="value">{{ order.id }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">创建时间：</span>
+              <span class="value">{{ order.createTime }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">备注：</span>
+              <span class="value">{{ order.remark || '无' }}</span>
             </div>
           </div>
+        </el-card>
 
-          <div class="order-section">
-            <h3>商品信息</h3>
-            <div class="order-items">
-              <div v-for="item in order.items" :key="item.id" class="order-item">
-                <div class="item-info">
-                  <el-image 
-                    :src="item.productImage || '/default-product.jpg'" 
-                    fit="cover"
-                    class="item-image"
-                  />
-                  <div class="item-details">
-                    <h4 class="item-name">{{ item.productName }}</h4>
-                    <div class="item-price">
-                      <span>{{ formatPrice(item.productPrice) }} × {{ item.quantity }}</span>
-                      <span class="subtotal">小计：{{ formatPrice(item.subtotal) }}</span>
-                    </div>
-                  </div>
+        <el-card class="delivery-info">
+          <template #header>
+            <div class="section-header">
+              <span class="section-title">收货信息</span>
+            </div>
+          </template>
+          
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">收货人：</span>
+              <span class="value">{{ order.receiverName }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">联系电话：</span>
+              <span class="value">{{ order.receiverPhone }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">收货地址：</span>
+              <span class="value">{{ order.address }}</span>
+            </div>
+          </div>
+        </el-card>
+
+        <el-card class="products-info">
+          <template #header>
+            <div class="section-header">
+              <span class="section-title">商品信息</span>
+            </div>
+          </template>
+          
+          <div class="products-list">
+            <div v-for="item in order.items" :key="item.id" class="product-item">
+              <el-image 
+                :src="item.productImage || '/default-product.jpg'" 
+                fit="cover"
+                class="product-image"
+              />
+              <div class="product-details">
+                <h3 class="product-name">{{ item.productName }}</h3>
+                <div class="product-price">
+                  <span>{{ formatPrice(item.productPrice) }} × {{ item.quantity }}</span>
+                  <span class="subtotal">小计：{{ formatPrice(item.subtotal) }}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="order-section">
-            <h3>订单信息</h3>
-            <div class="order-summary">
-              <p><span class="label">订单备注：</span>{{ order.remark || '无' }}</p>
-              <p><span class="label">创建时间：</span>{{ order.createTime }}</p>
-              <p><span class="label">更新时间：</span>{{ order.updateTime }}</p>
-              <div class="total-amount">
-                总计：<span class="price">{{ formatPrice(order.totalAmount) }}</span>
-              </div>
+          <div class="order-amount">
+            <div class="amount-item">
+              <span>商品总额：</span>
+              <span>{{ formatPrice(order.totalAmount) }}</span>
+            </div>
+            <div v-if="order.discountAmount > 0" class="amount-item discount">
+              <span>优惠金额：</span>
+              <span>-{{ formatPrice(order.discountAmount) }}</span>
+            </div>
+            <div class="amount-item final">
+              <span>实付金额：</span>
+              <span>{{ formatPrice(order.payAmount) }}</span>
             </div>
           </div>
         </el-card>
@@ -160,90 +185,75 @@ onMounted(() => {
   font-weight: bold;
 }
 
-.order-content {
-  min-height: 200px;
-}
-
-.order-card {
+.order-info,
+.delivery-info,
+.products-info {
   margin-bottom: 20px;
 }
 
-.order-header {
+.section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.order-info {
-  display: flex;
-  gap: 20px;
-  color: #666;
-  font-size: 14px;
-}
-
-.order-section {
-  margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #EBEEF5;
-}
-
-.order-section:last-child {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-.order-section h3 {
-  margin: 0 0 16px;
+.section-title {
   font-size: 16px;
   font-weight: bold;
-  color: #333;
 }
 
-.delivery-info p {
-  margin: 8px 0;
-  color: #666;
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
 }
 
 .label {
-  color: #999;
-  margin-right: 8px;
+  color: #666;
+  margin-right: 10px;
 }
 
-.order-items {
+.value {
+  color: #333;
+}
+
+.products-list {
+  margin-bottom: 20px;
+}
+
+.product-item {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  gap: 20px;
+  padding: 20px 0;
+  border-bottom: 1px solid #eee;
 }
 
-.order-item {
-  padding: 16px;
-  background-color: #f8f9fa;
+.product-item:last-child {
+  border-bottom: none;
+}
+
+.product-image {
+  width: 100px;
+  height: 100px;
   border-radius: 4px;
 }
 
-.item-info {
-  display: flex;
-  gap: 16px;
-}
-
-.item-image {
-  width: 80px;
-  height: 80px;
-  border-radius: 4px;
-}
-
-.item-details {
+.product-details {
   flex: 1;
 }
 
-.item-name {
-  margin: 0 0 8px;
-  font-size: 14px;
-  font-weight: bold;
+.product-name {
+  margin: 0 0 10px;
+  font-size: 16px;
+  color: #333;
 }
 
-.item-price {
+.product-price {
   display: flex;
   justify-content: space-between;
   color: #666;
@@ -254,23 +264,30 @@ onMounted(() => {
   font-weight: bold;
 }
 
-.order-summary {
+.order-amount {
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.amount-item {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
   color: #666;
 }
 
-.order-summary p {
-  margin: 8px 0;
+.amount-item span:first-child {
+  margin-right: 20px;
 }
 
-.total-amount {
-  margin-top: 16px;
-  text-align: right;
-  font-size: 16px;
+.amount-item.discount {
+  color: #67c23a;
 }
 
-.price {
+.amount-item.final {
   color: #f56c6c;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: bold;
 }
 </style> 

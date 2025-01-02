@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import type { OrderListResponse } from '@/types/api'
 
 // 删除订单响应接口
 export interface DeleteOrderRes {
@@ -46,6 +47,9 @@ export interface OrderInfo {
   userName: string
   userEmail: string
   totalAmount: number
+  discountAmount: number
+  payAmount: number
+  userCouponId: number
   receiverName: string
   receiverPhone: string
   address: string
@@ -75,9 +79,13 @@ export interface ResultOrderInfo {
 
 // 获取订单列表
 export function getOrders() {
-  return request({
+  const token = localStorage.getItem('token')
+  return request<OrderListResponse>({
     url: '/order/list',
-    method: 'get'
+    method: 'get',
+    headers: {
+      'Authorization': token || ''
+    }
   })
 }
 
@@ -117,7 +125,7 @@ export function getOrderDetail(orderId: number) {
     url: `/order/${orderId}`,
     method: 'get',
     headers: {
-      'Authorization': token ? `Bearer ${token}` : ''
+      'Authorization': token || ''
     }
   })
 } 
