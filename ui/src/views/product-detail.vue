@@ -63,23 +63,28 @@ const handleAddToCart = async () => {
 // 添加到收藏
 const handleAddToFavorite = async () => {
   if (!product.value) return
+  
+  // 检查用户是否登录
+  const token = localStorage.getItem('token')
+  if (!token) {
+    ElMessage.warning('请先登录')
+    return
+  }
+
   try {
-    const params: AddToFavoriteParams = {
-      productId: product.value.id!
+    console.log('开始添加收藏，商品ID:', product.value.id)
+    const response = await addToFavorite(product.value.id!)
+    console.log('收藏响应:', response)
+    const res = response.data
+    if (res.code === 200) {
+      ElMessage.success('收藏成功')
     }
-    const response = await addToFavorite(product.value.id!, params)
-    if (response.data) {
-      const res = response.data as AddToFavoriteRes
-      if (res.code === 200) {
-        ElMessage.success('添加到收藏成功')
-      } else {
-        ElMessage.error(res.message || '添加到收藏失败')
-      }
-    } else {
-      ElMessage.error('添加到收藏失败')
+  } catch (error: any) {
+    // 错误已在请求拦截器中处理
+    console.error('收藏失败:', error)
+    if (error.response) {
+      console.error('错误响应:', error.response)
     }
-  } catch (error) {
-    ElMessage.error('添加到收藏失败')
   }
 }
 

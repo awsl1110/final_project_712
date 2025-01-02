@@ -11,7 +11,7 @@ import java.util.List;
 
 @Tag(name = "销售统计", description = "销售统计相关接口")
 @RestController
-@RequestMapping("/sales")
+@RequestMapping("/api/sales")
 public class SalesStatisticsController {
 
     @Autowired

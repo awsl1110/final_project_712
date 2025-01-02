@@ -12,7 +12,7 @@ import java.util.List;
 
 @Tag(name = "退货管理", description = "退货相关接口")
 @RestController
-@RequestMapping("/return-orders")
+@RequestMapping("/api/return-orders")
 public class ReturnOrderController {
 
     @Autowired

@@ -69,6 +69,7 @@ export interface OrderItemInfo {
   productImage: string
   quantity: number
   subtotal: number
+  hasReviewed: boolean
 }
 
 export interface ResultOrderInfo {

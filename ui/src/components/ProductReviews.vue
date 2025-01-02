@@ -99,9 +99,15 @@ const fetchReviews = async () => {
       totalPage.value = total
       totalRow.value = row
     }
-  } catch (error) {
-    ElMessage.error('获取商品评价失败')
-    console.error('获取商品评价失败:', error)
+  } catch (error: any) {
+    if (error.message === '此商品无评价') {
+      reviews.value = []
+      totalPage.value = 0
+      totalRow.value = 0
+    } else {
+      ElMessage.error('获取商品评价失败')
+      console.error('获取商品评价失败:', error)
+    }
   } finally {
     loading.value = false
   }

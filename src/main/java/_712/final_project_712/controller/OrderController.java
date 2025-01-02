@@ -13,7 +13,7 @@ import java.util.List;
 
 @Tag(name = "订单管理", description = "订单相关接口")
 @RestController
-@RequestMapping("/order")
+@RequestMapping("/api/order")
 public class OrderController {
 
     @Autowired

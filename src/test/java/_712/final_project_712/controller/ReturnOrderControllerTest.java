@@ -2,6 +2,8 @@ package _712.final_project_712.controller;
 
 import _712.final_project_712.model.ReturnOrder;
 import _712.final_project_712.service.ReturnOrderService;
+import _712.final_project_712.util.JwtUtil;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -36,6 +38,28 @@ public class ReturnOrderControllerTest {
     @MockBean
     private ReturnOrderService returnOrderService;
 
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    @BeforeEach
+    void setUp() {
+        // 准备测试数据
+        ReturnOrder returnOrder = new ReturnOrder();
+        returnOrder.setId(1L);
+        returnOrder.setOrderId(100L);
+        returnOrder.setUserId(1L);
+        returnOrder.setReturnReason("商品质量问题");
+        returnOrder.setReturnAmount(new BigDecimal("100.00"));
+        returnOrder.setStatus(0);
+        returnOrder.setApplyTime(LocalDateTime.now());
+        returnOrder.setCreateTime(LocalDateTime.now());
+        returnOrder.setUpdateTime(LocalDateTime.now());
+
+        // 配置JWT验证通过
+        when(jwtUtil.validateToken(anyString())).thenReturn(true);
+        when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(1L);
+    }
+
     @Test
     void testGetReturnOrderByOrderId() throws Exception {
         // 准备测试数据
@@ -54,7 +78,8 @@ public class ReturnOrderControllerTest {
         when(returnOrderService.getReturnOrderByOrderId(anyLong())).thenReturn(returnOrder);
 
         // 执行测试并验证结果
-        mockMvc.perform(get("/return-orders/order/100"))
+        mockMvc.perform(get("/api/return-orders/order/100")
+                .header("Authorization", "Bearer test-token"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
@@ -71,7 +96,8 @@ public class ReturnOrderControllerTest {
         when(returnOrderService.getReturnOrderByOrderId(anyLong())).thenReturn(null);
 
         // 执行测试并验证结果
-        mockMvc.perform(get("/return-orders/order/999"))
+        mockMvc.perform(get("/api/return-orders/order/999")
+                .header("Authorization", "Bearer test-token"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(404))
@@ -85,7 +111,8 @@ public class ReturnOrderControllerTest {
                 .thenThrow(new RuntimeException("数据库错误"));
 
         // 执行测试并验证结果
-        mockMvc.perform(get("/return-orders/order/100"))
+        mockMvc.perform(get("/api/return-orders/order/100")
+                .header("Authorization", "Bearer test-token"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(500))
@@ -96,7 +123,8 @@ public class ReturnOrderControllerTest {
     void testUpdateReturnStatus_Success() throws Exception {
         doNothing().when(returnOrderService).updateReturnStatus(anyLong(), anyInt(), anyString());
 
-        mockMvc.perform(put("/return-orders/1/status")
+        mockMvc.perform(put("/api/return-orders/1/status")
+                .header("Authorization", "Bearer test-token")
                 .param("status", "1")
                 .param("handleNote", "同意退货"))
                 .andDo(print())
@@ -109,7 +137,8 @@ public class ReturnOrderControllerTest {
         doThrow(new IllegalArgumentException("无效的状态值"))
                 .when(returnOrderService).updateReturnStatus(anyLong(), anyInt(), anyString());
 
-        mockMvc.perform(put("/return-orders/1/status")
+        mockMvc.perform(put("/api/return-orders/1/status")
+                .header("Authorization", "Bearer test-token")
                 .param("status", "5")
                 .param("handleNote", "同意退货"))
                 .andDo(print())
@@ -139,7 +168,8 @@ public class ReturnOrderControllerTest {
         List<ReturnOrder> returnOrders = Arrays.asList(returnOrder1, returnOrder2);
         when(returnOrderService.getUserReturns(anyLong())).thenReturn(returnOrders);
 
-        mockMvc.perform(get("/return-orders/user/1"))
+        mockMvc.perform(get("/api/return-orders/user/1")
+                .header("Authorization", "Bearer test-token"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
@@ -155,7 +185,8 @@ public class ReturnOrderControllerTest {
         when(returnOrderService.getUserReturns(anyLong()))
                 .thenThrow(new RuntimeException("数据库错误"));
 
-        mockMvc.perform(get("/return-orders/user/1"))
+        mockMvc.perform(get("/api/return-orders/user/1")
+                .header("Authorization", "Bearer test-token"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(500))

@@ -3,9 +3,12 @@ package _712.final_project_712.controller;
 import _712.final_project_712.model.Result;
 import _712.final_project_712.model.dto.ActivityDTO;
 import _712.final_project_712.service.ActivityService;
+import _712.final_project_712.util.JwtUtil;
+import _712.final_project_712.mapper.ActivityMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mybatis.spring.boot.test.autoconfigure.AutoConfigureMybatis;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -23,6 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ActivityController.class)
+@AutoConfigureMybatis
 class ActivityControllerTest {
 
     @Autowired
@@ -30,6 +34,12 @@ class ActivityControllerTest {
 
     @MockBean
     private ActivityService activityService;
+
+    @MockBean
+    private ActivityMapper activityMapper;
+
+    @MockBean
+    private JwtUtil jwtUtil;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -51,7 +61,7 @@ class ActivityControllerTest {
     void getActivityDetail_ShouldReturnActivity() throws Exception {
         when(activityService.getActivityDetail(anyLong())).thenReturn(mockActivity);
 
-        mockMvc.perform(get("/activity/1"))
+        mockMvc.perform(get("/api/activity/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.code").value(200))
@@ -63,7 +73,7 @@ class ActivityControllerTest {
     void getOngoingActivities_ShouldReturnActivityList() throws Exception {
         when(activityService.getOngoingActivities()).thenReturn(mockActivities);
 
-        mockMvc.perform(get("/activity/ongoing"))
+        mockMvc.perform(get("/api/activity/ongoing"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.code").value(200))
@@ -80,7 +90,7 @@ class ActivityControllerTest {
         
         when(activityService.getUpcomingActivities()).thenReturn(upcomingActivities);
 
-        mockMvc.perform(get("/activity/upcoming"))
+        mockMvc.perform(get("/api/activity/upcoming"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.code").value(200))

@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import type { Result } from '@/types/api'
 
 // 商品信息接口
 export interface Product {
@@ -57,24 +58,28 @@ export interface GetFavoritesRes {
 export function getFavorites() {
   return request({
     url: '/favorites',
-    method: 'get',
-    headers: {
-      'Authorization': localStorage.getItem('token') || ''
-    }
+    method: 'get'
   })
 }
 
 /** 
  * 添加商品到收藏
  * @param {number} productId 商品ID
- * @param {AddToFavoriteParams} params 其他参数
- * @returns {Promise} 添加结果
+ * @returns {Promise<Result<boolean>>} 添加结果
  */
-export function addToFavorite(productId: number, params: AddToFavoriteParams = { productId }) {
-  return request({
+export function addToFavorite(productId: number) {
+  console.log('Sending favorite request for productId:', productId)
+  return request<Result<boolean>>({
     url: `/favorites/${productId}`,
     method: 'post',
-    data: params
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    // 添加 transformRequest 来处理请求数据
+    transformRequest: [(data, headers) => {
+      console.log('Request headers:', headers)
+      return ''  // POST 请求不需要请求体，因为参数在 URL 中
+    }]
   })
 }
 

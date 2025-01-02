@@ -1,9 +1,12 @@
 package _712.final_project_712.controller;
 
+import _712.final_project_712.service.FileService;
+import _712.final_project_712.util.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -12,6 +15,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,6 +29,14 @@ public class FileControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockBean
+    private FileService fileService;
+
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    private static final String TEST_TOKEN = "Bearer test-token";
 
     @Test
     public void testUploadAvatar() throws Exception {
@@ -51,6 +66,13 @@ public class FileControllerTest {
             Files.write(testImagePath, imageData);
         }
 
+        // Mock JWT验证
+        when(jwtUtil.validateToken(anyString())).thenReturn(true);
+        when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(1L);
+
+        // Mock FileService
+        when(fileService.saveAvatar(any(), anyLong())).thenReturn("/file/avatar/1/test-image.jpg");
+
         // 创建MockMultipartFile
         MockMultipartFile file = new MockMultipartFile(
             "file",                       // 参数名
@@ -62,14 +84,20 @@ public class FileControllerTest {
         // 执行测试请求
         mockMvc.perform(multipart("/api/file/avatar")
                 .file(file)
-                .param("userId", "1"))
+                .param("userId", "1")
+                .header("Authorization", TEST_TOKEN))
             .andDo(print())  // 打印请求和响应详情
             .andExpect(status().isOk())  // 验证响应状态是否为200
-            .andExpect(MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("/api/file/avatar/1/")));  // 验证返回的URL格式
+            .andExpect(MockMvcResultMatchers.jsonPath("$.code").value(200))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.data").value("/file/avatar/1/test-image.jpg"));
     }
 
     @Test
     public void testUploadInvalidFile() throws Exception {
+        // Mock JWT验证
+        when(jwtUtil.validateToken(anyString())).thenReturn(true);
+        when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(1L);
+
         // 测试上传空文件
         MockMultipartFile emptyFile = new MockMultipartFile(
             "file",
@@ -80,9 +108,12 @@ public class FileControllerTest {
 
         mockMvc.perform(multipart("/api/file/avatar")
                 .file(emptyFile)
-                .param("userId", "1"))
+                .param("userId", "1")
+                .header("Authorization", TEST_TOKEN))
             .andDo(print())
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isOk())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.code").value(400))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("请选择要上传的文件"));
 
         // 测试上传非图片文件
         MockMultipartFile textFile = new MockMultipartFile(
@@ -94,8 +125,32 @@ public class FileControllerTest {
 
         mockMvc.perform(multipart("/api/file/avatar")
                 .file(textFile)
-                .param("userId", "1"))
+                .param("userId", "1")
+                .header("Authorization", TEST_TOKEN))
             .andDo(print())
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isOk())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.code").value(400))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("只支持图片文件上传"));
+
+        // 测试上传不支持的图片格式
+        MockMultipartFile webpFile = new MockMultipartFile(
+            "file",
+            "test.webp",
+            "image/webp",
+            "fake webp content".getBytes()
+        );
+
+        // Mock FileService 抛出异常
+        when(fileService.saveAvatar(any(), anyLong()))
+            .thenThrow(new IllegalArgumentException("只支持 JPG、PNG、GIF 格式的图片文件"));
+
+        mockMvc.perform(multipart("/api/file/avatar")
+                .file(webpFile)
+                .param("userId", "1")
+                .header("Authorization", TEST_TOKEN))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.code").value(400))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("只支持 JPG、PNG、GIF 格式的图片文件"));
     }
 } 

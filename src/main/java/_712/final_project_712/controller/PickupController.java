@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "取件管理")
 @RestController
-@RequestMapping("/pickup")
+@RequestMapping("/api/pickup")
 public class PickupController {
 
     @Autowired

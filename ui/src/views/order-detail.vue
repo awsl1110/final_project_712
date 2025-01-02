@@ -4,10 +4,16 @@ import { useRoute } from 'vue-router'
 import { getOrderDetail } from '@/api/order'
 import type { OrderInfo } from '@/api/order'
 import { ElMessage } from 'element-plus'
+import ReviewForm from '@/components/ReviewForm.vue'
 
 const route = useRoute()
 const order = ref<OrderInfo | null>(null)
 const loading = ref(true)
+const showReviewForm = ref(false)
+const currentReviewItem = ref<{
+  orderId: number
+  productId: number
+} | null>(null)
 
 // 获取订单详情
 const fetchOrderDetail = async () => {
@@ -51,6 +57,32 @@ const getStatusText = (status: number) => {
     4: '已取消'
   }
   return statusMap[status] || '未知状态'
+}
+
+// 打开评价表单
+const handleReview = (productId: number) => {
+  if (!order.value) return
+  currentReviewItem.value = {
+    orderId: order.value.id,
+    productId
+  }
+  showReviewForm.value = true
+}
+
+// 评价成功回调
+const handleReviewSuccess = () => {
+  ElMessage.success('评价成功')
+  // 重新加载订单详情
+  fetchOrderDetail()
+}
+
+// 判断商品是否可以评价
+const canReview = (item: OrderInfo['items'][0]) => {
+  if (!order.value) return false
+  console.log('订单状态:', order.value.status)
+  console.log('商品评价状态:', item.hasReviewed)
+  // 只有已完成的订单可以评价
+  return order.value.status === 3 && !item.hasReviewed
 }
 
 onMounted(() => {
@@ -141,6 +173,22 @@ onMounted(() => {
                   <span>{{ formatPrice(item.productPrice) }} × {{ item.quantity }}</span>
                   <span class="subtotal">小计：{{ formatPrice(item.subtotal) }}</span>
                 </div>
+                <div class="product-actions">
+                  <el-button
+                    v-if="canReview(item)"
+                    type="primary"
+                    size="small"
+                    @click="handleReview(item.productId)"
+                  >
+                    评价商品
+                  </el-button>
+                  <el-tag v-else-if="item.hasReviewed" type="info" size="small">
+                    已评价
+                  </el-tag>
+                  <el-tag v-else type="warning" size="small">
+                    {{ order.status === 3 ? '未评价' : '待完成' }}
+                  </el-tag>
+                </div>
               </div>
             </div>
           </div>
@@ -162,6 +210,15 @@ onMounted(() => {
         </el-card>
       </template>
     </div>
+
+    <!-- 评价表单 -->
+    <ReviewForm
+      v-if="currentReviewItem"
+      v-model="showReviewForm"
+      :order-id="currentReviewItem.orderId"
+      :product-id="currentReviewItem.productId"
+      @success="handleReviewSuccess"
+    />
   </div>
 </template>
 
@@ -289,5 +346,19 @@ onMounted(() => {
   color: #f56c6c;
   font-size: 16px;
   font-weight: bold;
+}
+
+.product-actions {
+  margin-top: 10px;
+}
+
+.product-actions .el-button {
+  padding: 8px 16px;
+}
+
+.product-actions .el-tag {
+  padding: 0 12px;
+  height: 32px;
+  line-height: 30px;
 }
 </style> 

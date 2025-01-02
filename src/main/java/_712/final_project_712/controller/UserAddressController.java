@@ -14,7 +14,7 @@ import java.util.List;
 
 @Tag(name = "用户地址管理", description = "用户收货地址相关接口")
 @RestController
-@RequestMapping("/address")
+@RequestMapping("/api/address")
 public class UserAddressController {
 
     @Autowired

@@ -90,6 +90,7 @@ export interface OrderItemInfo {
   productImage: string
   quantity: number
   subtotal: number
+  hasReviewed: boolean
 }
 
 // 订单信息
@@ -148,4 +149,19 @@ export interface ProductReviewListResponse {
   code: number
   message: string
   data: PageProductReview
+}
+
+// 商品分类类型定义
+export interface ProductCategory {
+  id: number
+  name: string
+  createTime: string
+  updateTime: string
+}
+
+// 商品分类列表响应
+export interface ProductCategoryListResponse {
+  code: number
+  message: string
+  data: ProductCategory[]
 } 
