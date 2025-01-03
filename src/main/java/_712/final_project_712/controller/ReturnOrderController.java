@@ -4,6 +4,7 @@ import _712.final_project_712.model.Result;
 import _712.final_project_712.model.ReturnOrder;
 import _712.final_project_712.service.ReturnOrderService;
 import _712.final_project_712.util.JwtUtil;
+import _712.final_project_712.model.dto.CreateReturnOrderDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,21 +27,17 @@ public class ReturnOrderController {
     @GetMapping("/order/{orderId}")
     public Result<ReturnOrder> getReturnOrderByOrderId(
         @Parameter(description = "订单ID") @PathVariable Long orderId,
-        @RequestHeader(value = "Authorization", required = false) String token
+        @RequestHeader("Authorization") String token
     ) {
         try {
-            // 处理token，去掉Bearer前缀
-            if (token != null && token.startsWith("Bearer ")) {
-                token = token.substring(7);
-            }
-            
             ReturnOrder returnOrder = returnOrderService.getReturnOrderByOrderId(orderId);
             if (returnOrder == null) {
                 return Result.error(404, "未找到退货记录");
             }
             return Result.success(returnOrder);
         } catch (Exception e) {
-            return Result.error(500, "系统繁忙，请稍后重试");
+            e.printStackTrace();
+            return Result.error(500, "查询失败：" + e.getMessage());
         }
     }
 
@@ -50,18 +47,14 @@ public class ReturnOrderController {
         @Parameter(description = "退货ID") @PathVariable Long returnId,
         @Parameter(description = "状态：0-待处理，1-已同意，2-已拒绝，3-已完成") @RequestParam Integer status,
         @Parameter(description = "处理备注") @RequestParam(required = false) String handleNote,
-        @RequestHeader(value = "Authorization", required = false) String token
+        @RequestHeader("Authorization") String token
     ) {
         try {
-            // 处理token，去掉Bearer前缀
-            if (token != null && token.startsWith("Bearer ")) {
-                token = token.substring(7);
-            }
-            
             returnOrderService.updateReturnStatus(returnId, status, handleNote);
             return Result.success();
         } catch (Exception e) {
-            return Result.error(500, "更新状态失败：" + e.getMessage());
+            e.printStackTrace();
+            return Result.error(500, "更新失败：" + e.getMessage());
         }
     }
 
@@ -69,18 +62,50 @@ public class ReturnOrderController {
     @GetMapping("/user/{userId}")
     public Result<List<ReturnOrder>> getUserReturns(
         @Parameter(description = "用户ID") @PathVariable Long userId,
-        @RequestHeader(value = "Authorization", required = false) String token
+        @RequestHeader("Authorization") String token
     ) {
         try {
-            // 处理token，去掉Bearer前缀
-            if (token != null && token.startsWith("Bearer ")) {
-                token = token.substring(7);
-            }
-            
             List<ReturnOrder> returns = returnOrderService.getUserReturns(userId);
             return Result.success(returns);
         } catch (Exception e) {
+            e.printStackTrace();
             return Result.error(500, "查询失败：" + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "创建退货申请")
+    @PostMapping
+    public Result<ReturnOrder> createReturnOrder(
+        @RequestBody CreateReturnOrderDTO dto,
+        @RequestHeader("Authorization") String token
+    ) {
+        try {
+            // 基本参数验证
+            if (dto.getOrderId() == null || dto.getReturnAmount() == null || 
+                dto.getReturnReason() == null || dto.getReturnReason().trim().isEmpty()) {
+                return Result.error(400, "请填写完整的退货信息");
+            }
+
+            // 处理token
+            String processedToken = token;
+            if (token.startsWith("Bearer ")) {
+                processedToken = token.substring(7);
+            }
+
+            Long userId = jwtUtil.getUserIdFromToken(processedToken);
+            if (userId == null) {
+                return Result.error(401, "token无效，请重新登录");
+            }
+
+            // 创建退货申请
+            ReturnOrder created = returnOrderService.createReturnOrder(dto, userId);
+            return Result.success(created);
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (e.getMessage() != null && e.getMessage().contains("退货记录已存在")) {
+                return Result.error(400, e.getMessage());
+            }
+            return Result.error(500, "创建退货申请失败：" + e.getMessage());
         }
     }
 } 

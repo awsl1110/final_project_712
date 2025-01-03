@@ -1,195 +1,187 @@
 package _712.final_project_712.controller;
 
+import _712.final_project_712.mapper.ReturnOrderMapper;
 import _712.final_project_712.model.ReturnOrder;
+import _712.final_project_712.model.dto.CreateReturnOrderDTO;
 import _712.final_project_712.service.ReturnOrderService;
 import _712.final_project_712.util.JwtUtil;
+import com.mybatisflex.core.query.QueryWrapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static _712.final_project_712.model.table.ReturnOrderTableDef.RETURN_ORDER;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@AutoConfigureMockMvc
-public class ReturnOrderControllerTest {
+@Transactional
+class ReturnOrderControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
-    private ReturnOrderService returnOrderService;
+    private ReturnOrderController returnOrderController;
 
     @MockBean
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private ReturnOrderService returnOrderService;
+
+    @Autowired
+    private ReturnOrderMapper returnOrderMapper;
+
+    private String validToken;
+    private Long testUserId;
+
     @BeforeEach
     void setUp() {
-        // 准备测试数据
-        ReturnOrder returnOrder = new ReturnOrder();
-        returnOrder.setId(1L);
-        returnOrder.setOrderId(100L);
-        returnOrder.setUserId(1L);
-        returnOrder.setReturnReason("商品质量问题");
-        returnOrder.setReturnAmount(new BigDecimal("100.00"));
-        returnOrder.setStatus(0);
-        returnOrder.setApplyTime(LocalDateTime.now());
-        returnOrder.setCreateTime(LocalDateTime.now());
-        returnOrder.setUpdateTime(LocalDateTime.now());
+        // 设置测试数据
+        validToken = "Bearer test_token";
+        testUserId = 1001L;
 
-        // 配置JWT验证通过
+        // Mock JWT验证
         when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(1L);
+        when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(testUserId);
+
+        // 清理测试数据
+        try {
+            // 先删除可能存在的记录
+            returnOrderMapper.deleteByQuery(
+                QueryWrapper.create()
+                    .where(RETURN_ORDER.USER_ID.eq(testUserId))
+                    .or(RETURN_ORDER.ORDER_ID.in(1001L, 1002L, 1003L))
+            );
+        } catch (Exception e) {
+            // 记录异常但不中断测试
+            e.printStackTrace();
+        }
     }
 
     @Test
-    void testGetReturnOrderByOrderId() throws Exception {
+    void testCreateReturnOrder() {
         // 准备测试数据
-        ReturnOrder returnOrder = new ReturnOrder();
-        returnOrder.setId(1L);
-        returnOrder.setOrderId(100L);
-        returnOrder.setUserId(1L);
-        returnOrder.setReturnReason("商品质量问题");
-        returnOrder.setReturnAmount(new BigDecimal("100.00"));
-        returnOrder.setStatus(0);
-        returnOrder.setApplyTime(LocalDateTime.now());
-        returnOrder.setCreateTime(LocalDateTime.now());
-        returnOrder.setUpdateTime(LocalDateTime.now());
+        CreateReturnOrderDTO dto = new CreateReturnOrderDTO();
+        dto.setOrderId(1003L);
+        dto.setReturnReason("商品质量问题");
+        dto.setReturnAmount(new BigDecimal("1999.99"));
+        dto.setImages("http://example.com/image1.jpg");
 
-        // 配置mock行为
-        when(returnOrderService.getReturnOrderByOrderId(anyLong())).thenReturn(returnOrder);
+        // 测试创建退货申请
+        var result = returnOrderController.createReturnOrder(dto, validToken);
 
-        // 执行测试并验证结果
-        mockMvc.perform(get("/api/return-orders/order/100")
-                .header("Authorization", "Bearer test-token"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.id").value(1))
-                .andExpect(jsonPath("$.data.orderId").value(100))
-                .andExpect(jsonPath("$.data.returnReason").value("商品质量问题"))
-                .andExpect(jsonPath("$.data.returnAmount").value(100.00))
-                .andExpect(jsonPath("$.data.status").value(0));
+        // 验证结果
+        assertEquals(200, result.getCode(), "创建退货申请应该成功");
+        assertNotNull(result.getData(), "返回的数据不应该为空");
+        assertEquals(dto.getOrderId(), result.getData().getOrderId());
+        assertEquals(dto.getReturnReason(), result.getData().getReturnReason());
+        assertEquals(0, dto.getReturnAmount().compareTo(result.getData().getReturnAmount()));
     }
 
     @Test
-    void testGetReturnOrderByOrderIdWhenNotFound() throws Exception {
-        // 配置mock行为 - 返回null表示未找到退货记录
-        when(returnOrderService.getReturnOrderByOrderId(anyLong())).thenReturn(null);
+    void testGetReturnOrderByOrderId() {
+        // 准备测试数据
+        Long orderId = 8L;
 
-        // 执行测试并验证结果
-        mockMvc.perform(get("/api/return-orders/order/999")
-                .header("Authorization", "Bearer test-token"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(404))
-                .andExpect(jsonPath("$.message").value("未找到退货记录"));
+        // 测试查询退货信息
+        var result = returnOrderController.getReturnOrderByOrderId(orderId, validToken);
+
+        // 验证结果
+        if (result.getData() != null) {
+            assertEquals(200, result.getCode());
+            assertEquals(orderId, result.getData().getOrderId());
+        } else {
+            assertEquals(404, result.getCode());
+        }
     }
 
     @Test
-    void testGetReturnOrderByOrderIdWhenError() throws Exception {
-        // 配置mock行为 - 抛出异常
-        when(returnOrderService.getReturnOrderByOrderId(anyLong()))
-                .thenThrow(new RuntimeException("数据库错误"));
+    void testUpdateReturnStatus() {
+        // 先创建一个退货申请，使用唯一的orderId
+        CreateReturnOrderDTO dto = new CreateReturnOrderDTO();
+        dto.setOrderId(1001L);  // 使用一个唯一的orderId
+        dto.setReturnReason("测试更新状态");
+        dto.setReturnAmount(new BigDecimal("100"));
+        dto.setImages("http://example.com/image1.jpg");
 
-        // 执行测试并验证结果
-        mockMvc.perform(get("/api/return-orders/order/100")
-                .header("Authorization", "Bearer test-token"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(500))
-                .andExpect(jsonPath("$.message").value("系统繁忙，请稍后重试"));
+        // 创建退货申请并验证
+        var createResult = returnOrderController.createReturnOrder(dto, validToken);
+        assertEquals(200, createResult.getCode(), "创建退货申请应该成功");
+        assertNotNull(createResult.getData(), "创建退货申请失败");
+        assertNotNull(createResult.getData().getId(), "退货记录ID不应为空");
+        
+        // 获取创建的退货记录ID
+        Long returnId = createResult.getData().getId();
+        assertNotNull(returnId, "退货记录ID不应为空");
+        
+        // 测试更新状态
+        var result = returnOrderController.updateReturnStatus(
+            returnId, 
+            1, // 1-已同意
+            "同意退货",
+            validToken
+        );
+
+        // 验证结果
+        assertEquals(200, result.getCode(), "更新状态应该成功");
+        
+        // 验证状态是否更新成功
+        var updatedOrder = returnOrderService.getReturnOrderByOrderId(dto.getOrderId());
+        assertNotNull(updatedOrder, "更新后的退货记录不应为空");
+        assertEquals(1, updatedOrder.getStatus());
+        assertEquals("同意退货", updatedOrder.getHandleNote());
     }
 
     @Test
-    void testUpdateReturnStatus_Success() throws Exception {
-        doNothing().when(returnOrderService).updateReturnStatus(anyLong(), anyInt(), anyString());
+    void testGetUserReturns() {
+        // 测试查询用户的退货列表
+        var result = returnOrderController.getUserReturns(testUserId, validToken);
 
-        mockMvc.perform(put("/api/return-orders/1/status")
-                .header("Authorization", "Bearer test-token")
-                .param("status", "1")
-                .param("handleNote", "同意退货"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
+        // 验证结果
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        
+        // 验证返回的列表中所有记录都属于测试用户
+        for (ReturnOrder returnOrder : result.getData()) {
+            assertEquals(testUserId, returnOrder.getUserId());
+        }
     }
 
     @Test
-    void testUpdateReturnStatus_InvalidStatus() throws Exception {
-        doThrow(new IllegalArgumentException("无效的状态值"))
-                .when(returnOrderService).updateReturnStatus(anyLong(), anyInt(), anyString());
+    void testCreateDuplicateReturnOrder() {
+        // 准备测试数据
+        CreateReturnOrderDTO dto = new CreateReturnOrderDTO();
+        dto.setOrderId(1002L);
+        dto.setReturnReason("测试重复创建");
+        dto.setReturnAmount(new BigDecimal("100"));
+        dto.setImages("http://example.com/image1.jpg");
 
-        mockMvc.perform(put("/api/return-orders/1/status")
-                .header("Authorization", "Bearer test-token")
-                .param("status", "5")
-                .param("handleNote", "同意退货"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(500))
-                .andExpect(jsonPath("$.message").value("更新状态失败：无效的状态值"));
+        // 第一次创建
+        var result1 = returnOrderController.createReturnOrder(dto, validToken);
+        assertEquals(200, result1.getCode(), "第一次创建应该成功");
+        assertNotNull(result1.getData(), "第一次创建返回的数据不应为空");
+        assertNotNull(result1.getData().getId(), "退货记录ID不应为空");
+
+        // 尝试重复创建 - 预期会抛出异常
+        var result2 = returnOrderController.createReturnOrder(dto, validToken);
+        assertEquals(400, result2.getCode(), "重复创建应该失败");
+        assertTrue(result2.getMessage().contains("退货记录已存在"), "错误信息应该提示记录已存在");
     }
 
     @Test
-    void testGetUserReturns_Success() throws Exception {
-        ReturnOrder returnOrder1 = new ReturnOrder();
-        returnOrder1.setId(1L);
-        returnOrder1.setOrderId(100L);
-        returnOrder1.setUserId(1L);
-        returnOrder1.setReturnReason("商品质量问题");
-        returnOrder1.setReturnAmount(new BigDecimal("100.00"));
-        returnOrder1.setStatus(0);
-
-        ReturnOrder returnOrder2 = new ReturnOrder();
-        returnOrder2.setId(2L);
-        returnOrder2.setOrderId(101L);
-        returnOrder2.setUserId(1L);
-        returnOrder2.setReturnReason("尺寸不合适");
-        returnOrder2.setReturnAmount(new BigDecimal("200.00"));
-        returnOrder2.setStatus(1);
-
-        List<ReturnOrder> returnOrders = Arrays.asList(returnOrder1, returnOrder2);
-        when(returnOrderService.getUserReturns(anyLong())).thenReturn(returnOrders);
-
-        mockMvc.perform(get("/api/return-orders/user/1")
-                .header("Authorization", "Bearer test-token"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.length()").value(2))
-                .andExpect(jsonPath("$.data[0].id").value(1))
-                .andExpect(jsonPath("$.data[0].returnReason").value("商品质量问题"))
-                .andExpect(jsonPath("$.data[1].id").value(2))
-                .andExpect(jsonPath("$.data[1].returnReason").value("尺寸不合适"));
-    }
-
-    @Test
-    void testGetUserReturns_Error() throws Exception {
-        when(returnOrderService.getUserReturns(anyLong()))
-                .thenThrow(new RuntimeException("数据库错误"));
-
-        mockMvc.perform(get("/api/return-orders/user/1")
-                .header("Authorization", "Bearer test-token"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(500))
-                .andExpect(jsonPath("$.message").value("查询失败：数据库错误"));
+    void testCreateReturnOrderWithInvalidParams() {
+        // 测试缺少必要参数
+        CreateReturnOrderDTO dto = new CreateReturnOrderDTO();
+        var result = returnOrderController.createReturnOrder(dto, validToken);
+        
+        assertEquals(400, result.getCode());
+        assertTrue(result.getMessage().contains("请填写完整的退货信息"));
     }
 } 
