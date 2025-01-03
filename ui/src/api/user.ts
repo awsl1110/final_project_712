@@ -68,13 +68,7 @@ export const userApi = {
       headers: {
         'Content-Type': 'multipart/form-data'
       },
-      timeout: 30000, // 增加上传超时时间到30秒
-      onUploadProgress: (progressEvent) => {
-        if (progressEvent.total) {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          console.log('上传进度:', percentCompleted + '%')
-        }
-      }
+      timeout: 30000 // 增加上传超时时间到30秒
     })
   },
 

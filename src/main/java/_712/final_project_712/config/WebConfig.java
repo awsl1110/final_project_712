@@ -73,13 +73,13 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns(
                         "/api/file/**", 
-                        "/api/favorite/**", 
+                        "/api/favorite/**",
+                        "",
                         "/api/order/**", 
                         "/api/review/**",
                         "/api/address/**",
                         "/api/pickup/**",
                         "/api/return-orders/**",
-                        "/api/sales/**",
                         "/api/user/profile/**",
                         "/api/activity/participate/**"
                 )
@@ -89,6 +89,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/doc.html",
                         "/webjars/**",
                         "/api/product/**",
+                        "/api/sales/**",
                         "/api/review/list",
                         "/api/review/*/detail",
                         "/api/file/avatar/*/view/**",

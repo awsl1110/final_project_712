@@ -114,25 +114,23 @@ onMounted(() => {
 
 <template>
   <div class="favorites-container">
-    <div class="page-header">
-      <div class="header">
-        <div class="title-wrapper">
+    <el-card class="page-header">
+      <template #header>
+        <div class="header">
           <span class="title">我的收藏</span>
           <span class="count">共 {{ favorites.length }} 件商品</span>
         </div>
-      </div>
-    </div>
+      </template>
+    </el-card>
 
     <div class="favorites-content">
       <el-empty 
         v-if="!loading && favorites.length === 0" 
         description="暂无收藏商品" 
       >
-        <template #extra>
-          <el-button type="primary" @click.passive="router.push('/products')">
-            去逛逛
-          </el-button>
-        </template>
+        <el-button type="primary" @click="router.push('/products')">
+          去逛逛
+        </el-button>
       </el-empty>
       
       <el-row v-else :gutter="20" v-loading="loading">
@@ -144,24 +142,25 @@ onMounted(() => {
           v-for="item in favorites" 
           :key="item.id"
         >
-          <el-card class="favorite-card" shadow="hover">
+          <el-card class="favorite-card" :body-style="{ padding: '0px' }">
             <div class="product-content">
-              <div class="product-main" @click.passive="handleViewDetail(item)">
+              <div class="product-main" @click="handleViewDetail(item)">
                 <el-image 
                   :src="item.product.imageUrl || '/default-product.jpg'" 
                   :alt="item.product.name"
                   class="product-image"
                   fit="cover"
+                  :preview-src-list="[item.product.imageUrl]"
                 >
                   <template #error>
                     <div class="image-slot">
-                      <el-icon><Picture /></el-icon>
+                      <el-icon :size="24"><Picture /></el-icon>
                     </div>
                   </template>
                 </el-image>
                 <div class="product-info">
-                  <div class="product-name">{{ item.product.name }}</div>
-                  <div class="product-description">{{ item.product.description }}</div>
+                  <h3 class="product-name">{{ item.product.name }}</h3>
+                  <p class="product-description">{{ item.product.description }}</p>
                 </div>
               </div>
               <div class="product-footer">
@@ -170,7 +169,7 @@ onMounted(() => {
                   <el-tag 
                     :type="item.product.stock > 0 ? 'success' : 'error'" 
                     size="small"
-                    effect="plain"
+                    effect="light"
                   >
                     {{ item.product.stock > 0 ? '有货' : '无货' }}
                   </el-tag>
@@ -179,7 +178,7 @@ onMounted(() => {
                   <el-button 
                     circle
                     type="danger"
-                    @click.stop.passive="handleRemove(item)"
+                    @click.stop="handleRemove(item)"
                     :loading="loadingItem === item.id"
                   >
                     <el-icon><Delete /></el-icon>
@@ -187,7 +186,7 @@ onMounted(() => {
                   <el-button 
                     circle
                     type="primary" 
-                    @click.stop.passive="handleAddToCart(item)"
+                    @click.stop="handleAddToCart(item)"
                     :loading="loadingItem === item.id"
                     :disabled="item.product.stock <= 0"
                   >
@@ -203,153 +202,128 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .favorites-container {
-  padding: var(--el-main-padding);
-  background-color: var(--el-bg-color-page);
-  min-height: calc(100vh - var(--el-header-height));
-}
+  padding: 20px;
+  min-height: calc(100vh - 120px);
+  background: #f5f7fa;
 
-.page-header {
-  margin-bottom: var(--el-main-padding);
-}
+  .page-header {
+    margin-bottom: 20px;
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
 
-.title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+      .title {
+        font-size: 20px;
+        font-weight: bold;
+      }
 
-.title {
-  font-size: var(--el-font-size-large);
-  font-weight: var(--el-font-weight-bold);
-  color: var(--el-text-color-primary);
-}
+      .count {
+        color: var(--el-text-color-secondary);
+      }
+    }
+  }
 
-.count {
-  font-size: var(--el-font-size-base);
-  color: var(--el-text-color-secondary);
-}
+  .favorites-content {
+    .favorite-card {
+      height: 100%;
+      transition: all 0.3s ease;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
 
-.favorites-content {
-  min-height: 300px;
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
+      }
+
+      .product-content {
+        .product-main {
+          cursor: pointer;
+
+          .product-image {
+            width: 100%;
+            height: 200px;
+            display: block;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+
+            .image-slot {
+              height: 100%;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              background: var(--el-fill-color-light);
+              color: var(--el-text-color-secondary);
+            }
+          }
+
+          .product-info {
+            padding: 14px;
+
+            .product-name {
+              margin: 0 0 8px;
+              font-size: 16px;
+              font-weight: bold;
+              color: var(--el-text-color-primary);
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+
+            .product-description {
+              margin: 0;
+              font-size: 14px;
+              color: var(--el-text-color-secondary);
+              overflow: hidden;
+              text-overflow: ellipsis;
+              display: -webkit-box;
+              -webkit-line-clamp: 2;
+              -webkit-box-orient: vertical;
+              line-height: 1.5;
+              height: 42px;
+            }
+          }
+        }
+
+        .product-footer {
+          padding: 14px;
+          border-top: 1px solid var(--el-border-color-lighter);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .price-stock {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .price {
+              color: var(--el-color-danger);
+              font-size: 18px;
+              font-weight: bold;
+            }
+          }
+
+          .product-actions {
+            display: flex;
+            gap: 8px;
+          }
+        }
+      }
+    }
+  }
 }
 
 .el-row {
-  margin-bottom: -16px;
-  margin-right: -16px;
+  margin: 0 -10px;
 }
 
 .el-col {
-  padding-bottom: 16px;
-  padding-right: 16px;
-}
-
-.favorite-card {
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: var(--el-border-radius-base);
-  height: 100%;
-}
-
-.favorite-card :deep(.el-card__body) {
-  padding: 0;
-  height: 100%;
-}
-
-.product-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.product-main {
-  flex: 1;
-  cursor: pointer;
-}
-
-.product-image {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-}
-
-.image-slot {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  background: var(--el-fill-color-light);
-  color: var(--el-text-color-secondary);
-  font-size: var(--el-font-size-extra-large);
-}
-
-.product-info {
-  padding: var(--el-card-padding);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.product-name {
-  font-size: var(--el-font-size-base);
-  font-weight: var(--el-font-weight-bold);
-  color: var(--el-text-color-primary);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.5;
-}
-
-.product-description {
-  font-size: var(--el-font-size-small);
-  color: var(--el-text-color-secondary);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.5;
-}
-
-.product-footer {
-  padding: var(--el-card-padding);
-  border-top: 1px solid var(--el-border-color-lighter);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: var(--el-fill-color-light);
-}
-
-.price-stock {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.price {
-  font-size: var(--el-font-size-large);
-  font-weight: var(--el-font-weight-bold);
-  color: var(--el-color-danger);
-}
-
-.product-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.product-actions :deep(.el-button) {
-  --el-button-size: 32px;
-  --el-button-padding-horizontal: 0;
-}
-
-.product-actions :deep(.el-button .el-icon) {
-  font-size: var(--el-font-size-base);
+  padding: 0 10px;
+  margin-bottom: 20px;
 }
 </style> 

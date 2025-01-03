@@ -122,16 +122,27 @@ public class CouponUsageTest {
     }
 
     @Test
-    @DisplayName("测试重复领取优惠券")
-    void testReceiveCouponTwice() {
+    @DisplayName("测试多次领取优惠券")
+    void testReceiveCouponMultipleTimes() {
         // 第一次领取
         assertTrue(userCouponService.receiveCoupon(TEST_USER_ID, normalCoupon.getId()));
 
-        // 第二次领取应该抛出异常
-        BusinessException exception = assertThrows(BusinessException.class, () -> {
-            userCouponService.receiveCoupon(TEST_USER_ID, normalCoupon.getId());
+        // 第二次领取
+        assertTrue(userCouponService.receiveCoupon(TEST_USER_ID, normalCoupon.getId()));
+
+        // 验证用户优惠券列表
+        List<UserCouponDTO> userCoupons = userCouponService.getUserCoupons(TEST_USER_ID);
+        assertEquals(2, userCoupons.size());
+        
+        // 验证两张优惠券都是同一个优惠券
+        userCoupons.forEach(coupon -> {
+            assertEquals(normalCoupon.getId(), coupon.getCouponId());
+            assertEquals(0, coupon.getStatus()); // 都是未使用状态
         });
-        assertEquals("您已经领取过该优惠券", exception.getMessage());
+
+        // 验证优惠券剩余数量是否正确减少
+        Coupon updatedCoupon = couponMapper.selectByIdForUpdate(normalCoupon.getId());
+        assertEquals(normalCoupon.getRemain() - 2, updatedCoupon.getRemain());
     }
 
     @Test

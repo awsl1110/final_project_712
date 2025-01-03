@@ -6,7 +6,6 @@ import { addToCart } from '@/api/cart'
 import { addToFavorite } from '@/api/favorite'
 import type { Product } from '@/api/product'
 import type { AddToCartParams, CartResponse } from '@/api/cart'
-import type { AddToFavoriteRes, AddToFavoriteParams } from '@/api/favorite'
 import type { Result, ProductCategory } from '@/types/api'
 import { ElMessage } from 'element-plus'
 import { ShoppingCart, Star, PictureFilled } from '@element-plus/icons-vue'
@@ -109,19 +108,13 @@ const handleAddToFavorite = async (product: Product) => {
   }
 
   try {
-    console.log('开始添加收藏，商品ID:', product.id)
     const response = await addToFavorite(product.id)
-    console.log('收藏响应:', response)
     const res = response.data
     if (res.code === 200) {
       ElMessage.success('收藏成功')
     }
   } catch (error: any) {
     // 错误已在请求拦截器中处理
-    console.error('收藏失败:', error)
-    if (error.response) {
-      console.error('错误响应:', error.response)
-    }
   }
 }
 
