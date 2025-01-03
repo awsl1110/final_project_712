@@ -5,6 +5,7 @@ import { getOrderDetail } from '@/api/order'
 import type { OrderInfo } from '@/api/order'
 import { ElMessage } from 'element-plus'
 import ReviewForm from '@/components/ReviewForm.vue'
+import { formatDate } from '@/utils/date'
 
 const route = useRoute()
 const order = ref<OrderInfo | null>(null)
@@ -121,7 +122,7 @@ onMounted(() => {
             </div>
             <div class="info-item">
               <span class="label">创建时间：</span>
-              <span class="value">{{ order.createTime }}</span>
+              <span class="value">{{ formatDate(order.createTime) }}</span>
             </div>
             <div class="info-item">
               <span class="label">备注：</span>

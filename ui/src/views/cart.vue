@@ -202,7 +202,7 @@
                             </div>
                           </div>
                           <span style="color: var(--el-text-color-secondary); font-size: 12px">
-                            有效期至：{{ userCoupon.coupon.endTime }}
+                            有效期至：{{ formatDate(userCoupon.coupon.endTime) }}
                           </span>
                         </div>
                       </el-radio>
@@ -240,7 +240,296 @@
     </el-dialog>
   </div>
 </template>
+<script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue'
+import { getCartList, updateCartQuantity, removeFromCart, updateCartSelection } from '@/api/cart'
+import { createOrder } from '@/api/order'
+import type { CartItem, CartResponse } from '@/api/cart'
+import type { Result, Address, UserCoupon } from '@/types/api'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Minus, Delete, Ticket, ArrowDown, Picture } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
+import { addressApi } from '@/api/address'
+import { getUserCoupons } from '@/api/coupon'
+import { formatDate } from '@/utils/date'
 
+const router = useRouter()
+const cartItems = ref<CartItem[]>([])
+const loading = ref(true)
+const loadingItem = ref<number | null>(null)
+const addressId = ref<number>(0)
+const remark = ref('')
+const showAddressDialog = ref(false)
+const addresses = ref<Address[]>([])
+const addressLoading = ref(false)
+const userCouponId = ref<number>(0)
+const userCoupons = ref<UserCoupon[]>([])
+const couponLoading = ref(false)
+
+// 计算总价
+const totalPrice = computed(() => {
+  return cartItems.value
+    .filter(item => item.selected === 1)
+    .reduce((total, item) => {
+      return total + (item.product.productPrice || 0) * item.quantity
+    }, 0)
+})
+
+// 格式化价格
+const formatPrice = (price: number | undefined) => {
+  return price ? price.toLocaleString() : '0'
+}
+
+// 获取购物车列表
+const fetchCartList = async () => {
+  try {
+    loading.value = true
+    const response = await getCartList()
+    const res = response.data
+    if (res.code === 200) {
+      cartItems.value = res.data || []
+      // 确保选中状态是数字类型
+      cartItems.value.forEach(item => {
+        item.selected = typeof item.selected === 'boolean' ? (item.selected ? 1 : 0) : item.selected
+      })
+    }
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      ElMessage.error('请先登录')
+    } else {
+      ElMessage.error(error.message || '获取购物车列表失败')
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+// 更新商品数量
+const handleQuantityChange = async (item: CartItem, quantity: number) => {
+  if (quantity < 1) {
+    return
+  }
+  try {
+    const response = await updateCartQuantity(item.id, quantity)
+    const res = response.data as Result<any>
+    if (res.code === 200) {
+      item.quantity = quantity
+      ElMessage.success('更新数量成功')
+    } else {
+      ElMessage.error(res.message || '更新数量失败')
+    }
+  } catch (error) {
+    ElMessage.error('更新数量失败')
+  }
+}
+
+// 删除商品
+const handleDelete = async (item: CartItem) => {
+  try {
+    await ElMessageBox.confirm('确定要删除这个商品吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    loadingItem.value = item.id
+    const response = await removeFromCart(item.productId)
+    if (response.data) {
+      const res = response.data as CartResponse
+      if (res.code === 200) {
+        cartItems.value = cartItems.value.filter(i => i.id !== item.id)
+        ElMessage.success('删除成功')
+      } else {
+        ElMessage.error(res.message || '删除失败')
+      }
+    } else {
+      ElMessage.error('删除失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  } finally {
+    loadingItem.value = null
+  }
+}
+
+// 更新选中状态
+const handleSelectionChange = async (item: CartItem) => {
+  try {
+    loadingItem.value = item.id
+    const newSelected = item.selected === 1 ? 0 : 1
+    const originalSelected = item.selected
+    
+    // 先更新本地状态，提供即时反馈
+    item.selected = newSelected
+    
+    const response = await updateCartSelection(item.id, newSelected)
+    if (response.data.code !== 200) {
+      // 如果更新失败，恢复原来的状态
+      item.selected = originalSelected
+      ElMessage.error(response.data.message || '更新选中状态失败')
+    }
+  } catch (error) {
+    // 如果发生错误，恢复原来的状态
+    item.selected = item.selected === 1 ? 0 : 1
+    ElMessage.error('更新选中状态失败')
+  } finally {
+    loadingItem.value = null
+  }
+}
+
+// 获取地址列表
+const fetchAddresses = async () => {
+  try {
+    addressLoading.value = true
+    const res = await addressApi.getAddressList()
+    if (res.data.code === 200) {
+      addresses.value = res.data.data
+      // 如果有默认地址，自动选择
+      const defaultAddress = addresses.value.find(addr => addr.isDefault)
+      if (defaultAddress) {
+        addressId.value = defaultAddress.id
+      } else if (addresses.value.length > 0) {
+        // 如果没有默认地址，选择第一个
+        addressId.value = addresses.value[0].id
+      }
+    }
+  } catch (error) {
+    ElMessage.error('获取地址列表失败')
+  } finally {
+    addressLoading.value = false
+  }
+}
+
+// 获取用户优惠券列表
+const fetchUserCoupons = async () => {
+  try {
+    couponLoading.value = true
+    const response = await getUserCoupons()
+    if (response.data.code === 200) {
+      // 只获取未使用的优惠券
+      userCoupons.value = response.data.data.filter(uc => uc.status === 0)
+    }
+  } catch (error) {
+    ElMessage.error('获取优惠券列表失败')
+  } finally {
+    couponLoading.value = false
+  }
+}
+
+// 处理结算按钮点击
+const handleCheckoutClick = () => {
+  const selectedItems = cartItems.value.filter(item => item.selected === 1)
+  if (selectedItems.length === 0) {
+    ElMessage.warning('请选择要结算的商品')
+    return
+  }
+  showAddressDialog.value = true
+  // 打开对话框时获取地址列表和优惠券列表
+  fetchAddresses()
+  fetchUserCoupons()
+}
+
+// 处理提交订单
+const handleSubmitOrder = async () => {
+  if (!addressId.value) {
+    ElMessage.warning('请选择收货地址')
+    return
+  }
+
+  try {
+    const selectedItems = cartItems.value.filter(item => item.selected === 1)
+    // 创建订单
+    const createOrderRequest = {
+      cartIds: selectedItems.map(item => item.id),
+      addressId: addressId.value,
+      remark: remark.value || '',  // 确保remark不为undefined
+      userCouponId: userCouponId.value || undefined  // 添加优惠券ID
+    }
+
+    const token = localStorage.getItem('token')
+    if (!token) {
+      ElMessage.error('请先登录')
+      router.push('/login')
+      return
+    }
+
+    const response = await createOrder(createOrderRequest)
+
+    if (response.data.code === 200) {
+      // 清空已选择的商品
+      cartItems.value = cartItems.value.filter(item => item.selected !== 1)
+      ElMessage.success('订单创建成功')
+      showAddressDialog.value = false
+      // 跳转到订单详情页
+      router.push(`/order/${response.data.data.id}`)
+    } else {
+      ElMessage.error(response.data.message || '创建订单失败')
+    }
+  } catch (error: any) {
+    console.error('创建订单失败:', error)
+    if (error.response?.status === 401) {
+      ElMessage.error('请先登录')
+      router.push('/login')
+    } else {
+      ElMessage.error(error.response?.data?.message || '创建订单失败')
+    }
+  }
+}
+
+// 添加全选相关的计算属性和方法
+const selectAll = computed({
+  get: () => cartItems.value.length > 0 && cartItems.value.every(item => item.selected === 1),
+  set: (val) => handleSelectAll(val)
+})
+
+const isIndeterminate = computed(() => {
+  const selected = cartItems.value.filter(item => item.selected === 1)
+  return selected.length > 0 && selected.length < cartItems.value.length
+})
+
+const selectedCount = computed(() => cartItems.value.filter(item => item.selected === 1).length)
+
+const handleSelectAll = async (val: boolean) => {
+  const newSelection = val ? 1 : 0
+  try {
+    loading.value = true
+    // 先更新本地状态
+    const originalStates = cartItems.value.map(item => item.selected)
+    cartItems.value.forEach(item => item.selected = newSelection)
+
+    // 发送请求到服务器
+    const results = await Promise.allSettled(
+      cartItems.value.map(item => 
+        updateCartSelection(item.id, newSelection)
+      )
+    )
+
+    // 检查是否有失败的请求
+    const hasError = results.some(result => 
+      result.status === 'rejected' || 
+      (result.status === 'fulfilled' && result.value.data.code !== 200)
+    )
+    
+    if (hasError) {
+      // 如果有失败的请求，恢复原来的状态
+      cartItems.value.forEach((item, index) => {
+        item.selected = originalStates[index]
+      })
+      ElMessage.error('部分商品更新失败')
+    }
+  } catch (error) {
+    ElMessage.error('操作失败，请重试')
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchCartList()
+})
+</script>
 <style scoped lang="scss">
 .cart-container {
   padding: 20px;
@@ -389,263 +678,3 @@
   transition: transform 0.5s ease;
 }
 </style>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { getCartList, updateCartQuantity, removeFromCart, updateCartSelection } from '@/api/cart'
-import { createOrder } from '@/api/order'
-import type { CartItem, CartResponse } from '@/api/cart'
-import type { Result, Address, UserCoupon } from '@/types/api'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Minus, Delete, Ticket, ArrowDown, Picture } from '@element-plus/icons-vue'
-import { useRouter } from 'vue-router'
-import { addressApi } from '@/api/address'
-import { getUserCoupons } from '@/api/coupon'
-
-const router = useRouter()
-const cartItems = ref<CartItem[]>([])
-const loading = ref(true)
-const loadingItem = ref<number | null>(null)
-const addressId = ref<number>(0)
-const remark = ref('')
-const showAddressDialog = ref(false)
-const addresses = ref<Address[]>([])
-const addressLoading = ref(false)
-const userCouponId = ref<number>(0)
-const userCoupons = ref<UserCoupon[]>([])
-const couponLoading = ref(false)
-
-// 计算总价
-const totalPrice = computed(() => {
-  return cartItems.value
-    .filter(item => item.selected === 1)
-    .reduce((total, item) => {
-      return total + (item.product.productPrice || 0) * item.quantity
-    }, 0)
-})
-
-// 格式化价格
-const formatPrice = (price: number | undefined) => {
-  return price ? price.toLocaleString() : '0'
-}
-
-// 获取购物车列表
-const fetchCartList = async () => {
-  try {
-    loading.value = true
-    const response = await getCartList()
-    const res = response.data
-    if (res.code === 200) {
-      cartItems.value = res.data || []
-    }
-  } catch (error: any) {
-    if (error.response?.status === 401) {
-      ElMessage.error('请先登录')
-    } else {
-      ElMessage.error(error.message || '获取购物车列表失败')
-    }
-  } finally {
-    loading.value = false
-  }
-}
-
-// 更新商品数量
-const handleQuantityChange = async (item: CartItem, quantity: number) => {
-  if (quantity < 1) {
-    return
-  }
-  try {
-    const response = await updateCartQuantity(item.id, quantity)
-    const res = response.data as Result<any>
-    if (res.code === 200) {
-      item.quantity = quantity
-      ElMessage.success('更新数量成功')
-    } else {
-      ElMessage.error(res.message || '更新数量失败')
-    }
-  } catch (error) {
-    ElMessage.error('更新数量失败')
-  }
-}
-
-// 删除商品
-const handleDelete = async (item: CartItem) => {
-  try {
-    await ElMessageBox.confirm('确定要删除这个商品吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-    
-    loadingItem.value = item.id
-    const response = await removeFromCart(item.productId)
-    if (response.data) {
-      const res = response.data as CartResponse
-      if (res.code === 200) {
-        cartItems.value = cartItems.value.filter(i => i.id !== item.id)
-        ElMessage.success('删除成功')
-      } else {
-        ElMessage.error(res.message || '删除失败')
-      }
-    } else {
-      ElMessage.error('删除失败')
-    }
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('删除失败')
-    }
-  } finally {
-    loadingItem.value = null
-  }
-}
-
-// 更新选中状态
-const handleSelectionChange = async (item: CartItem) => {
-  try {
-    const newSelected = item.selected === 1 ? 0 : 1
-    const response = await updateCartSelection(item.id, newSelected)
-    const res = response.data as Result<any>
-    if (res.code === 200) {
-      item.selected = newSelected
-    } else {
-      ElMessage.error(res.message || '更新选中状态失败')
-    }
-  } catch (error) {
-    ElMessage.error('更新选中状态失败')
-  }
-}
-
-// 获取地址列表
-const fetchAddresses = async () => {
-  try {
-    addressLoading.value = true
-    const res = await addressApi.getAddressList()
-    if (res.data.code === 200) {
-      addresses.value = res.data.data
-      // 如果有默认地址，自动选择
-      const defaultAddress = addresses.value.find(addr => addr.isDefault)
-      if (defaultAddress) {
-        addressId.value = defaultAddress.id
-      } else if (addresses.value.length > 0) {
-        // 如果没有默认地址，选择第一个
-        addressId.value = addresses.value[0].id
-      }
-    }
-  } catch (error) {
-    ElMessage.error('获取地址列表失败')
-  } finally {
-    addressLoading.value = false
-  }
-}
-
-// 获取用户优惠券列表
-const fetchUserCoupons = async () => {
-  try {
-    couponLoading.value = true
-    const response = await getUserCoupons()
-    if (response.data.code === 200) {
-      // 只获取未使用的优惠券
-      userCoupons.value = response.data.data.filter(uc => uc.status === 0)
-    }
-  } catch (error) {
-    ElMessage.error('获取优惠券列表失败')
-  } finally {
-    couponLoading.value = false
-  }
-}
-
-// 处理结算按钮点击
-const handleCheckoutClick = () => {
-  const selectedItems = cartItems.value.filter(item => item.selected === 1)
-  if (selectedItems.length === 0) {
-    ElMessage.warning('请选择要结算的商品')
-    return
-  }
-  showAddressDialog.value = true
-  // 打开对话框时获取地址列表和优惠券列表
-  fetchAddresses()
-  fetchUserCoupons()
-}
-
-// 处理提交订单
-const handleSubmitOrder = async () => {
-  if (!addressId.value) {
-    ElMessage.warning('请选择收货地址')
-    return
-  }
-
-  try {
-    const selectedItems = cartItems.value.filter(item => item.selected === 1)
-    // 创建订单
-    const createOrderRequest = {
-      cartIds: selectedItems.map(item => item.id),
-      addressId: addressId.value,
-      remark: remark.value || '',  // 确保remark不为undefined
-      userCouponId: userCouponId.value || undefined  // 添加优惠券ID
-    }
-
-    const token = localStorage.getItem('token')
-    if (!token) {
-      ElMessage.error('请先登录')
-      router.push('/login')
-      return
-    }
-
-    const response = await createOrder(createOrderRequest)
-
-    if (response.data.code === 200) {
-      // 清空已选择的商品
-      cartItems.value = cartItems.value.filter(item => item.selected !== 1)
-      ElMessage.success('订单创建成功')
-      showAddressDialog.value = false
-      // 跳转到订单详情页
-      router.push(`/order/${response.data.data.id}`)
-    } else {
-      ElMessage.error(response.data.message || '创建订单失败')
-    }
-  } catch (error: any) {
-    console.error('创建订单失败:', error)
-    if (error.response?.status === 401) {
-      ElMessage.error('请先登录')
-      router.push('/login')
-    } else {
-      ElMessage.error(error.response?.data?.message || '创建订单失败')
-    }
-  }
-}
-
-// 添加全选相关的计算属性和方法
-const selectAll = computed({
-  get: () => cartItems.value.length > 0 && cartItems.value.every(item => item.selected === 1),
-  set: (val) => handleSelectAll(val)
-})
-
-const isIndeterminate = computed(() => {
-  const selected = cartItems.value.filter(item => item.selected === 1)
-  return selected.length > 0 && selected.length < cartItems.value.length
-})
-
-const selectedCount = computed(() => cartItems.value.filter(item => item.selected === 1).length)
-
-const handleSelectAll = async (val: boolean) => {
-  const newSelection = val ? 1 : 0
-  try {
-    loading.value = true
-    await Promise.all(
-      cartItems.value.map(item => 
-        updateCartSelection(item.id, newSelection)
-      )
-    )
-    cartItems.value.forEach(item => item.selected = newSelection)
-  } catch (error) {
-    ElMessage.error('操作失败，请重试')
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => {
-  fetchCartList()
-})
-</script>
-

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getOrders, cancelOrder, deleteOrder } from '@/api/order'
+import { getOrders, cancelOrder, deleteOrder, updateOrderStatus } from '@/api/order'
 import type { OrderInfo } from '@/api/order'
 import type { Result } from '@/types/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Document } from '@element-plus/icons-vue'
+import { formatDate } from '@/utils/date'
 
 const router = useRouter()
 const orders = ref<OrderInfo[]>([])
@@ -64,15 +65,18 @@ const handleDelete = async (order: OrderInfo) => {
       type: 'warning'
     })
     
-    const response = await deleteOrder(order.id)
-    if (response.code === 200) {
+    const response = await deleteOrder(order.id, {})
+    console.log('删除订单响应:', response)
+    if (response.data.code === 200 && response.data.data) {
       orders.value = orders.value.filter(o => o.id !== order.id)
       ElMessage.success('删除成功')
     } else {
-      ElMessage.error(response.message || '删除失败')
+      console.log('删除失败，响应数据:', response)
+      ElMessage.error(response.data.message || '删除失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
+      console.error('删除订单错误:', error)
       ElMessage.error('删除失败')
     }
   }
@@ -104,6 +108,31 @@ const handleViewDetail = (orderId: number) => {
   router.push(`/order/${orderId}`)
 }
 
+// 处理付款
+const handlePayment = async (order: OrderInfo) => {
+  try {
+    await ElMessageBox.confirm('确认付款？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    const response = await updateOrderStatus(order.id, 1, {})
+    console.log('支付响应:', response)
+    if (response.data.code === 200 && response.data.data) {
+      order.status = 1 // 更新为待发货状态
+      ElMessage.success('付款成功')
+    } else {
+      console.log('支付失败，响应数据:', response)
+      ElMessage.error(response.data.message || '付款失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('付款失败')
+    }
+  }
+}
+
 onMounted(() => {
   fetchOrders()
 })
@@ -128,7 +157,7 @@ onMounted(() => {
             <div class="order-header">
               <div class="order-info">
                 <span class="order-number">订单号：{{ order.id }}</span>
-                <span class="order-time">下单时间：{{ order.createTime }}</span>
+                <span class="order-time">下单时间：{{ formatDate(order.createTime) }}</span>
               </div>
               <div class="order-status">
                 <el-tag :type="order.status === 4 ? 'info' : order.status === 0 ? 'warning' : 'success'">
@@ -170,6 +199,7 @@ onMounted(() => {
                 v-if="order.status === 0" 
                 type="primary"
                 size="small"
+                @click="handlePayment(order)"
               >
                 去付款
               </el-button>

@@ -8,7 +8,7 @@ import type { Product } from '@/api/product'
 import type { AddToCartParams, CartResponse } from '@/api/cart'
 import type { Result, ProductCategory } from '@/types/api'
 import { ElMessage } from 'element-plus'
-import { ShoppingCart, Star, PictureFilled } from '@element-plus/icons-vue'
+import { ShoppingCart, Star, PictureFilled, Loading } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const products = ref<Product[]>([])
@@ -77,6 +77,13 @@ const handleCategoryChange = async (categoryId: number | null) => {
 
 // 添加到购物车
 const handleAddToCart = async (product: Product) => {
+  // 检查用户是否登录
+  const token = localStorage.getItem('token')
+  if (!token) {
+    ElMessage.warning('请先登录')
+    return
+  }
+
   try {
     const params: AddToCartParams = {
       productId: product.id,
@@ -104,6 +111,7 @@ const handleAddToFavorite = async (product: Product) => {
   const token = localStorage.getItem('token')
   if (!token) {
     ElMessage.warning('请先登录')
+    router.push('/login')
     return
   }
 
@@ -130,12 +138,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="product-container">
-    <el-card class="page-header">
+  <div class="p-4">
+    <el-card class="mb-4">
       <template #header>
-        <div class="header">
-          <span class="title">商品列表</span>
-          <div class="category-filter">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-4">
+          <el-text class="text-xl font-bold">商品列表</el-text>
+          <div class="d-flex align-items-center gap-2">
             <el-radio-group v-model="selectedCategory" @change="handleCategoryChange">
               <el-radio-button :label="null">全部</el-radio-button>
               <el-radio-button 
@@ -151,52 +159,122 @@ onMounted(() => {
       </template>
     </el-card>
 
-    <div class="product-list" v-loading="loading">
-      <el-row :gutter="20">
-        <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="product in filteredProducts" :key="product.id">
-          <el-card class="product-card" :body-style="{ padding: '0px' }">
-            <div class="product-content">
-              <div class="product-main" @click="handleViewDetail(product)">
-                <el-image 
-                  :src="product.imageUrl || '/default-product.jpg'" 
-                  :alt="product.name"
-                  class="product-image"
-                  fit="cover"
+    <div v-loading="loading" class="mt-5">
+      <el-empty v-if="filteredProducts.length === 0" description="暂无商品" />
+      
+      <el-row v-else :gutter="20">
+        <el-col 
+          v-for="product in filteredProducts" 
+          :key="product.id" 
+          :xs="24" 
+          :sm="12" 
+          :md="8" 
+          :lg="6" 
+          class="mb-5"
+        >
+          <el-card 
+            shadow="hover" 
+            :body-style="{ padding: 0 }"
+            class="product-card"
+          >
+            <el-image 
+              :src="product.imageUrl || '/default-product.jpg'" 
+              :alt="product.name"
+              class="w-100 product-image"
+              fit="cover"
+              :preview-src-list="product.imageUrl ? [product.imageUrl] : []"
+              :initial-index="0"
+              preview-teleported
+              loading="lazy"
+              @click="handleViewDetail(product)"
+            >
+              <template #placeholder>
+                <div class="image-placeholder d-flex justify-content-center align-items-center">
+                  <el-icon :size="24" class="is-loading"><Loading /></el-icon>
+                </div>
+              </template>
+              <template #error>
+                <div class="image-placeholder d-flex justify-content-center align-items-center flex-column gap-2">
+                  <el-icon :size="30"><picture-filled /></el-icon>
+                  <el-text class="text-secondary" size="small">图片加载失败</el-text>
+                </div>
+              </template>
+            </el-image>
+
+            <div class="p-4">
+              <el-link 
+                :underline="false"
+                @click="handleViewDetail(product)"
+              >
+                <el-text class="mb-3 text-truncate d-block" style="font-size: 16px">
+                  {{ product.name }}
+                </el-text>
+              </el-link>
+
+              <el-text type="info" class="mb-3 text-truncate d-block">
+                {{ product.description }}
+              </el-text>
+
+              <div class="mb-3">
+                <el-tag 
+                  v-if="product.brand" 
+                  size="small" 
+                  effect="plain"
+                  class="me-2"
                 >
-                  <template #error>
-                    <div class="image-slot">
-                      <el-icon><picture-filled /></el-icon>
-                    </div>
-                  </template>
-                </el-image>
-                <div class="product-info">
-                  <el-text class="product-name" truncated>{{ product.name }}</el-text>
-                  <el-text class="product-description" type="info">{{ product.description }}</el-text>
-                  <div class="product-meta">
-                    <el-tag size="small" type="info">{{ product.brand }}</el-tag>
-                    <el-tag size="small" type="info">{{ product.model }}</el-tag>
-                  </div>
-                  <div class="product-footer">
-                    <el-text class="price" type="danger" size="large">¥{{ product.price.toLocaleString() }}</el-text>
-                    <el-text class="stock" type="info">库存: {{ product.stock }}</el-text>
-                  </div>
+                  {{ product.brand }}
+                </el-tag>
+                <el-tag 
+                  v-if="product.model" 
+                  size="small" 
+                  effect="plain"
+                >
+                  {{ product.model }}
+                </el-tag>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <el-text type="danger" class="fs-4">
+                  ¥{{ product.price.toLocaleString() }}
+                </el-text>
+                <div class="d-flex gap-2">
+                  <el-tooltip 
+                    content="收藏" 
+                    placement="top" 
+                    :show-after="500"
+                  >
+                    <el-button 
+                      type="warning" 
+                      :icon="Star" 
+                      circle 
+                      plain
+                      @click="handleAddToFavorite(product)"
+                    />
+                  </el-tooltip>
+                  <el-tooltip 
+                    :content="product.stock <= 0 ? '暂无库存' : '加入购物车'" 
+                    placement="top" 
+                    :show-after="500"
+                  >
+                    <el-button 
+                      type="primary" 
+                      :icon="ShoppingCart" 
+                      circle
+                      plain
+                      :disabled="product.stock <= 0"
+                      @click="handleAddToCart(product)"
+                    />
+                  </el-tooltip>
                 </div>
               </div>
-              <div class="product-actions">
-                <el-button 
-                  type="warning"
-                  :icon="Star"
-                  circle
-                  @click="handleAddToFavorite(product)"
-                />
-                <el-button 
-                  type="primary" 
-                  :icon="ShoppingCart"
-                  circle
-                  @click="handleAddToCart(product)"
-                  :disabled="product.stock <= 0"
-                />
-              </div>
+
+              <el-tag 
+                :type="product.stock > 0 ? 'success' : 'danger'"
+                size="small"
+                effect="light"
+              >
+                {{ product.stock > 0 ? `库存: ${product.stock}` : '无货' }}
+              </el-tag>
             </div>
           </el-card>
         </el-col>
@@ -206,136 +284,57 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.product-container {
-  padding: var(--el-main-padding);
-}
-
-.page-header {
-  margin-bottom: 20px;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.title {
-  font-size: var(--el-font-size-extra-large);
-  font-weight: bold;
-}
-
-.product-list {
-  margin-top: 20px;
-}
-
-.product-card {
-  margin-bottom: 20px;
-  height: 400px;
-  position: relative;
+.product-card :deep(.el-card__body) {
+  height: 100%;
 }
 
 .product-image {
-  width: 100%;
-  height: 200px;
-}
-
-.image-slot {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  background: var(--el-fill-color-light);
-  color: var(--el-text-color-secondary);
-  font-size: 30px;
-}
-
-.product-info {
-  padding: var(--el-card-padding);
-  height: 200px;
-  display: flex;
-  flex-direction: column;
-}
-
-.product-name {
-  display: block;
-  font-size: var(--el-font-size-large);
-  font-weight: bold;
-  margin-bottom: 8px;
-}
-
-.product-description {
-  display: block;
-  margin-bottom: 8px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  flex: 1;
-}
-
-.product-meta {
-  margin-bottom: 8px;
-  display: flex;
-  gap: 8px;
-}
-
-.product-content {
-  height: 100%;
-}
-
-.product-main {
+  height: 240px;
+  transition: all 0.3s ease;
   cursor: pointer;
-  height: 100%;
 }
 
-.product-actions {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  display: flex;
-  gap: 8px;
-  z-index: 1;
+.product-image:hover {
+  opacity: 0.9;
 }
 
-.product-actions .el-button {
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+.image-placeholder {
+  width: 100%;
+  height: 240px;
+  background-color: var(--el-fill-color-light);
 }
 
-.product-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.is-loading {
+  animation: rotating 2s linear infinite;
 }
 
-.price {
-  font-size: var(--el-font-size-extra-large);
-  font-weight: bold;
+@keyframes rotating {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
-.stock {
-  font-size: var(--el-font-size-small);
-}
-
-.category-filter {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
   .category-filter {
     width: 100%;
     overflow-x: auto;
-    padding-bottom: 8px;
+  }
+  
+  .product-image {
+    height: 200px;
+  }
+  
+  .image-placeholder {
+    height: 200px;
   }
 }
 </style> 
