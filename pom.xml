@@ -138,6 +138,7 @@
 							<artifactId>mybatis-flex-processor</artifactId>
 							<version>1.10.3</version>
 						</path>
+
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>

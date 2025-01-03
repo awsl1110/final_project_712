@@ -2,6 +2,14 @@ import request from '@/utils/request'
 import type { Result } from '@/types/api'
 import type { Coupon, UserCoupon } from '@/types/api'
 
+// 获取所有优惠券列表
+export const getAllCoupons = () => {
+  return request<Coupon[]>({
+    url: '/api/coupons',
+    method: 'get'
+  })
+}
+
 // 获取可用优惠券列表
 export const getCoupons = () => {
   return request<Result<Coupon[]>>({
