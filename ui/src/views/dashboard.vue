@@ -1,29 +1,14 @@
 <template>
-  <div class="dashboard-container">
+  <div class="p-4">
     <el-card>
       <template #header>
-        <div class="card-header">
-          <span>欢迎使用</span>
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="text-lg font-bold">欢迎使用</span>
         </div>
       </template>
-      <div class="card-content">
+      <div class="text-secondary">
         这里是系统首页
       </div>
     </el-card>
   </div>
-</template>
-
-<style lang="scss" scoped>
-.dashboard-container {
-  padding: 20px;
-  
-  .card-header {
-    font-size: 18px;
-  }
-  
-  .card-content {
-    font-size: 14px;
-    color: #666;
-  }
-}
-</style> 
+</template> 

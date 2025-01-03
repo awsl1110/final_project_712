@@ -2,6 +2,7 @@ import request from '@/utils/request'
 
 // 购物车商品接口
 export interface CartProduct {
+  id: number
   productName: string
   productPrice: number
   productImage: string
@@ -36,6 +37,13 @@ export interface AddToCartParams {
 
 // 购物车响应接口
 export interface CartResponse {
+  code: number
+  message: string
+  data: null
+}
+
+// 更新购物车商品选中状态的响应接口
+export interface UpdateCartItemSelectedRes {
   code: number
   message: string
   data: null
@@ -110,18 +118,15 @@ export function removeFromCart(productId: number) {
  * 更新购物车商品选中状态
  * @param {number} cartId 购物车项ID
  * @param {number} selected 选中状态
- * @returns {Promise} 更新结果
+ * @returns {Promise<UpdateCartItemSelectedRes>} 更新结果
  */
 export function updateCartSelection(cartId: number, selected: number) {
-  return request<CartResponse>({
+  return request<UpdateCartItemSelectedRes>({
     url: '/cart/selected',
     method: 'put',
     params: {
       cartId,
       selected
-    },
-    headers: {
-      'Authorization': localStorage.getItem('token') || ''
     }
   })
 }

@@ -5,6 +5,7 @@ import { getOrderDetail } from '@/api/order'
 import type { OrderInfo } from '@/api/order'
 import { ElMessage } from 'element-plus'
 import ReviewForm from '@/components/ReviewForm.vue'
+import { formatDate } from '@/utils/date'
 
 const route = useRoute()
 const order = ref<OrderInfo | null>(null)
@@ -121,7 +122,7 @@ onMounted(() => {
             </div>
             <div class="info-item">
               <span class="label">创建时间：</span>
-              <span class="value">{{ order.createTime }}</span>
+              <span class="value">{{ formatDate(order.createTime) }}</span>
             </div>
             <div class="info-item">
               <span class="label">备注：</span>
@@ -261,7 +262,7 @@ onMounted(() => {
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
 }
 
@@ -271,12 +272,9 @@ onMounted(() => {
 }
 
 .label {
-  color: #666;
+  color: #606266;
   margin-right: 10px;
-}
-
-.value {
-  color: #333;
+  min-width: 80px;
 }
 
 .products-list {
@@ -285,9 +283,8 @@ onMounted(() => {
 
 .product-item {
   display: flex;
-  gap: 20px;
-  padding: 20px 0;
-  border-bottom: 1px solid #eee;
+  padding: 20px;
+  border-bottom: 1px solid #ebeef5;
 }
 
 .product-item:last-child {
@@ -297,32 +294,43 @@ onMounted(() => {
 .product-image {
   width: 100px;
   height: 100px;
+  margin-right: 20px;
   border-radius: 4px;
 }
 
 .product-details {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .product-name {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 16px;
-  color: #333;
+  color: #303133;
 }
 
 .product-price {
   display: flex;
   justify-content: space-between;
-  color: #666;
+  align-items: center;
+  color: #606266;
 }
 
 .subtotal {
-  color: #f56c6c;
+  color: #303133;
   font-weight: bold;
 }
 
+.product-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
 .order-amount {
-  border-top: 1px solid #eee;
+  border-top: 1px solid #ebeef5;
   padding-top: 20px;
   margin-top: 20px;
 }
@@ -331,34 +339,22 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 10px;
-  color: #666;
-}
-
-.amount-item span:first-child {
-  margin-right: 20px;
+  color: #606266;
 }
 
 .amount-item.discount {
-  color: #67c23a;
+  color: #f56c6c;
 }
 
 .amount-item.final {
-  color: #f56c6c;
   font-size: 16px;
   font-weight: bold;
+  color: #303133;
 }
 
-.product-actions {
-  margin-top: 10px;
-}
-
-.product-actions .el-button {
-  padding: 8px 16px;
-}
-
-.product-actions .el-tag {
-  padding: 0 12px;
-  height: 32px;
-  line-height: 30px;
+.amount-item span:last-child {
+  margin-left: 20px;
+  min-width: 100px;
+  text-align: right;
 }
 </style> 

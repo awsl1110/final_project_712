@@ -1,20 +1,228 @@
+<template>
+  <div class="coupons-container">
+    <el-card class="page-header">
+      <template #header>
+        <div class="header">
+          <div class="title-section">
+            <span class="title">优惠券中心</span>
+            <span class="subtitle">领取优惠券，享受优惠价格</span>
+          </div>
+        </div>
+      </template>
+    </el-card>
+
+    <div v-loading="loading">
+      <el-empty v-if="coupons.length === 0" description="暂无可用优惠券" />
+      
+      <el-row :gutter="20" v-else>
+        <el-col 
+          v-for="coupon in coupons" 
+          :key="coupon.id"
+          :xs="24"
+          :sm="24"
+          :md="12"
+          :lg="8"
+          class="mb-4"
+        >
+          <div class="coupon-card">
+            <div class="coupon-content">
+              <!-- 左侧金额部分 -->
+              <div class="coupon-left">
+                <div class="amount">
+                  <span class="currency" v-if="coupon.type === 1">¥</span>
+                  <span class="value">{{ coupon.value }}</span>
+                  <span class="unit">{{ coupon.type === 1 ? '元' : '折' }}</span>
+                </div>
+                <div class="condition">
+                  满{{ coupon.minAmount }}元可用
+                </div>
+              </div>
+              
+              <!-- 右侧信息部分 -->
+              <div class="coupon-right">
+                <h3 class="coupon-name">{{ coupon.name }}</h3>
+                <div class="coupon-info">
+                  <div class="info-item">
+                    <span class="label">有效期</span>
+                    <span class="text">{{ formatDate(coupon.startTime) }} 至 {{ formatDate(coupon.endTime) }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="label">剩余数量</span>
+                    <span class="text">{{ coupon.remain }}张</span>
+                  </div>
+                </div>
+                
+                <el-button
+                  type="danger"
+                  :disabled="coupon.remain <= 0"
+                  @click="handleReceiveCoupon(coupon)"
+                  class="receive-btn"
+                >
+                  {{ coupon.remain <= 0 ? '已领完' : '立即领取' }}
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+  </div>
+</template>
+
+<style lang="scss" scoped>
+.coupons-container {
+  padding: 20px;
+  
+  .page-header {
+    margin-bottom: 20px;
+    
+    .header {
+      .title-section {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        
+        .title {
+          font-size: 20px;
+          font-weight: bold;
+          color: var(--el-text-color-primary);
+        }
+        
+        .subtitle {
+          font-size: 14px;
+          color: var(--el-text-color-secondary);
+        }
+      }
+    }
+  }
+}
+
+.coupon-card {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  height: 160px;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
+  }
+  
+  .coupon-content {
+    display: flex;
+    position: relative;
+    height: 100%;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      left: 35%;
+      top: 0;
+      bottom: 0;
+      border-left: 1px dashed #ddd;
+    }
+  }
+  
+  .coupon-left {
+    width: 35%;
+    background: var(--el-color-danger-light-9);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    
+    .amount {
+      color: var(--el-color-danger);
+      text-align: center;
+      
+      .currency {
+        font-size: 18px;
+        font-weight: bold;
+      }
+      
+      .value {
+        font-size: 32px;
+        font-weight: bold;
+      }
+      
+      .unit {
+        font-size: 14px;
+        margin-left: 2px;
+      }
+    }
+    
+    .condition {
+      font-size: 13px;
+      color: var(--el-text-color-secondary);
+      margin-top: 8px;
+      text-align: center;
+    }
+  }
+  
+  .coupon-right {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    
+    .coupon-name {
+      margin: 0 0 12px;
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--el-text-color-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .coupon-info {
+      flex: 1;
+      
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 8px;
+        
+        .label {
+          font-size: 13px;
+          color: var(--el-text-color-secondary);
+          margin-bottom: 4px;
+        }
+        
+        .text {
+          font-size: 13px;
+          color: var(--el-text-color-primary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+    }
+    
+    .receive-btn {
+      width: 100%;
+      margin-top: 8px;
+      height: 32px;
+      font-size: 14px;
+    }
+  }
+}
+</style>
+
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getAllCoupons, receiveCoupon } from '@/api/coupon'
 import type { Coupon } from '@/types/api'
 import { ElMessage } from 'element-plus'
 import { Ticket } from '@element-plus/icons-vue'
+import { formatDate } from '@/utils/date'
 
 const coupons = ref<Coupon[]>([])
 const loading = ref(true)
-
-// 格式化日期
-const formatDate = (date: string | Date | null) => {
-  if (!date) return ''
-  const d = new Date(date)
-  if (isNaN(d.getTime())) return ''
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 // 获取优惠券列表
 const fetchCoupons = async () => {
@@ -76,182 +284,4 @@ const handleReceiveCoupon = async (coupon: Coupon) => {
 onMounted(() => {
   fetchCoupons()
 })
-</script>
-
-<template>
-  <div class="coupons-container">
-    <div class="page-header">
-      <el-card>
-        <div class="header">
-          <div class="title-wrapper">
-            <span class="title">优惠券中心</span>
-            <span class="subtitle">领取优惠券，享受优惠价格</span>
-          </div>
-        </div>
-      </el-card>
-    </div>
-
-    <div class="coupons-content" v-loading="loading">
-      <el-empty 
-        v-if="!loading && coupons.length === 0" 
-        description="暂无可领取的优惠券"
-      >
-        <template #image>
-          <el-icon :size="60">
-            <Ticket />
-          </el-icon>
-        </template>
-      </el-empty>
-
-      <div v-else class="coupon-list">
-        <el-card 
-          v-for="coupon in coupons" 
-          :key="coupon.id"
-          class="coupon-card"
-          :class="{ 'coupon-disabled': coupon.remain <= 0 || coupon.status === 0 }"
-        >
-          <div class="coupon-content">
-            <div class="coupon-value">
-              <template v-if="coupon.type === 1">
-                <span class="amount">¥{{ coupon.value }}</span>
-              </template>
-              <template v-else>
-                <span class="discount">{{ coupon.value }}折</span>
-              </template>
-            </div>
-            <div class="coupon-info">
-              <h3 class="coupon-name">{{ coupon.name }}</h3>
-              <p class="coupon-condition">满{{ coupon.minAmount }}元可用</p>
-              <p class="coupon-time">
-                {{ formatDate(coupon.startTime) }} 至 {{ formatDate(coupon.endTime) }}
-              </p>
-              <p class="coupon-remain">剩余 {{ coupon.remain }} 张</p>
-            </div>
-            <div class="coupon-action">
-              <el-button 
-                type="primary" 
-                :disabled="coupon.remain <= 0 || coupon.status === 0"
-                @click="handleReceiveCoupon(coupon)"
-              >
-                {{ coupon.status === 0 ? '已停用' : (coupon.remain > 0 ? '立即领取' : '已领完') }}
-              </el-button>
-            </div>
-          </div>
-        </el-card>
-      </div>
-    </div>
-  </div>
-</template>
-
-<style scoped>
-.coupons-container {
-  padding: 20px;
-}
-
-.page-header {
-  margin-bottom: 20px;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.title-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.title {
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--el-text-color-primary);
-}
-
-.subtitle {
-  font-size: 14px;
-  color: var(--el-text-color-secondary);
-}
-
-.coupon-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  padding: 20px 0;
-}
-
-.coupon-card {
-  position: relative;
-  transition: all 0.3s;
-}
-
-.coupon-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.coupon-content {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 20px;
-}
-
-.coupon-value {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 100px;
-}
-
-.amount, .discount {
-  font-size: 28px;
-  font-weight: bold;
-  color: var(--el-color-danger);
-}
-
-.coupon-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.coupon-name {
-  margin: 0;
-  font-size: 16px;
-  font-weight: bold;
-  color: var(--el-text-color-primary);
-}
-
-.coupon-condition,
-.coupon-time,
-.coupon-remain {
-  margin: 0;
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-}
-
-.coupon-action {
-  display: flex;
-  align-items: center;
-}
-
-.coupon-disabled {
-  opacity: 0.7;
-}
-
-.coupon-disabled::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.6);
-  pointer-events: none;
-}
-</style> 
+</script> 

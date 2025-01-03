@@ -123,6 +123,7 @@ import { useUserStore } from '@/stores/user'
 import { addressApi } from '@/api/address'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { Address } from '@/types/api'
+import { formatDate } from '@/utils/date'
 
 const userStore = useUserStore()
 const fileInput = ref<HTMLInputElement>()
@@ -185,11 +186,6 @@ const handleFileChange = async (event: Event) => {
     // 清空input，以便可以重复上传同一个文件
     input.value = ''
   }
-}
-
-const formatDate = (dateStr?: string) => {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleString()
 }
 
 const getAddressTitle = (address: Address) => {
