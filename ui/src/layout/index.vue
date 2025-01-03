@@ -26,6 +26,10 @@
           <el-icon><Star /></el-icon>
           <span>我的收藏</span>
         </el-menu-item>
+        <el-menu-item index="/coupons">
+          <el-icon><Ticket /></el-icon>
+          <span>优惠券中心</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     
@@ -76,7 +80,7 @@
 import { ref, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { Monitor, ArrowDown, Goods, ShoppingCart, List, Star } from '@element-plus/icons-vue'
+import { Monitor, ArrowDown, Goods, ShoppingCart, List, Star, Ticket } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
 const route = useRoute()
