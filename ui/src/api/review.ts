@@ -1,6 +1,12 @@
 import request from '@/utils/request'
 import type { ProductReviewListResponse, Result } from '@/types/api'
 
+interface ResultObject {
+  code: number
+  message: string
+  data: any
+}
+
 /**
  * 获取商品评价列表
  * @param productId 商品ID
@@ -21,7 +27,7 @@ export function getProductReviews(productId: number) {
  * @param orderId 订单ID
  * @param productId 商品ID
  * @param data 评价数据
- * @returns Promise<Result>
+ * @returns Promise<ResultObject>
  */
 export function addProductReview(
   orderId: number,
@@ -41,7 +47,7 @@ export function addProductReview(
     })
   }
 
-  return request<Result>({
+  return request<ResultObject>({
     url: `/review/${orderId}/${productId}`,
     method: 'POST',
     headers: {
