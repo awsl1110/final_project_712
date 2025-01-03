@@ -9,4 +9,5 @@ public interface ReturnOrderService {
     void updateReturnStatus(Long returnId, Integer status, String handleNote);
     List<ReturnOrder> getUserReturns(Long userId);
     ReturnOrder createReturnOrder(CreateReturnOrderDTO dto, Long userId);
+    ReturnOrder getReturnOrderById(Long returnId);
 } 

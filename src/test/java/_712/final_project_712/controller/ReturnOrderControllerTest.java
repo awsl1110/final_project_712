@@ -86,20 +86,62 @@ class ReturnOrderControllerTest {
     }
 
     @Test
-    void testGetReturnOrderByOrderId() {
-        // 准备测试数据
-        Long orderId = 8L;
-
+    void testGetReturnOrder() {
+        // 先创建一个退货记录
+        CreateReturnOrderDTO dto = new CreateReturnOrderDTO();
+        dto.setOrderId(1001L);
+        dto.setReturnReason("测试查询详情");
+        dto.setReturnAmount(new BigDecimal("100"));
+        var createResult = returnOrderController.createReturnOrder(dto, validToken);
+        
+        // 确保创建成功
+        assertEquals(200, createResult.getCode());
+        assertNotNull(createResult.getData());
+        
         // 测试查询退货信息
-        var result = returnOrderController.getReturnOrderByOrderId(orderId, validToken);
+        var result = returnOrderController.getReturnOrder(validToken);
 
         // 验证结果
-        if (result.getData() != null) {
-            assertEquals(200, result.getCode());
-            assertEquals(orderId, result.getData().getOrderId());
-        } else {
-            assertEquals(404, result.getCode());
-        }
+        assertEquals(200, result.getCode());
+        assertNotNull(result.getData());
+        assertEquals(testUserId, result.getData().getUserId());
+        assertEquals(dto.getOrderId(), result.getData().getOrderId());
+    }
+
+    @Test
+    void testGetReturnOrderWhenNoRecords() {
+        // 确保没有退货记录
+        returnOrderMapper.deleteByQuery(
+            QueryWrapper.create()
+                .where(RETURN_ORDER.USER_ID.eq(testUserId))
+        );
+        
+        // 测试查询退货信息
+        var result = returnOrderController.getReturnOrder(validToken);
+
+        // 验证结果
+        assertEquals(404, result.getCode());
+        assertTrue(result.getMessage().contains("未找到退货记录"));
+    }
+
+    @Test
+    void testGetReturnOrderUnauthorized() {
+        // 先创建一个退货记录
+        CreateReturnOrderDTO dto = new CreateReturnOrderDTO();
+        dto.setOrderId(1001L);
+        dto.setReturnReason("测试查询详情");
+        dto.setReturnAmount(new BigDecimal("100"));
+        var createResult = returnOrderController.createReturnOrder(dto, validToken);
+        
+        // 修改mock的用户ID，模拟其他用户访问
+        when(jwtUtil.getUserIdFromToken(anyString())).thenReturn(999L);
+        
+        // 测试查询退货信息
+        var result = returnOrderController.getReturnOrder(validToken);
+
+        // 验证结果
+        assertEquals(404, result.getCode());  // 应该返回404，因为对于用户999来说没有退货记录
+        assertTrue(result.getMessage().contains("未找到退货记录"));
     }
 
     @Test
@@ -141,12 +183,20 @@ class ReturnOrderControllerTest {
 
     @Test
     void testGetUserReturns() {
+        // 创建一些测试数据
+        CreateReturnOrderDTO dto = new CreateReturnOrderDTO();
+        dto.setOrderId(1001L);
+        dto.setReturnReason("测试查询列表");
+        dto.setReturnAmount(new BigDecimal("100"));
+        returnOrderController.createReturnOrder(dto, validToken);
+
         // 测试查询用户的退货列表
-        var result = returnOrderController.getUserReturns(testUserId, validToken);
+        var result = returnOrderController.getUserReturns(validToken);
 
         // 验证结果
         assertEquals(200, result.getCode());
         assertNotNull(result.getData());
+        assertFalse(result.getData().isEmpty(), "返回的列表不应为空");
         
         // 验证返回的列表中所有记录都属于测试用户
         for (ReturnOrder returnOrder : result.getData()) {

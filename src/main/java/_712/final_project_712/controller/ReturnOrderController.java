@@ -24,17 +24,39 @@ public class ReturnOrderController {
     private JwtUtil jwtUtil;
 
     @Operation(summary = "查询退货信息")
-    @GetMapping("/order/{orderId}")
-    public Result<ReturnOrder> getReturnOrderByOrderId(
-        @Parameter(description = "订单ID") @PathVariable Long orderId,
+    @GetMapping("/info")
+    public Result<ReturnOrder> getReturnOrder(
         @RequestHeader("Authorization") String token
     ) {
         try {
-            ReturnOrder returnOrder = returnOrderService.getReturnOrderByOrderId(orderId);
-            if (returnOrder == null) {
+            // 从token获取用户ID
+            Long userId = getUserIdFromToken(token);
+            
+            // 查询用户最近的退货记录
+            List<ReturnOrder> returns = returnOrderService.getUserReturns(userId);
+            
+            if (returns == null || returns.isEmpty()) {
                 return Result.error(404, "未找到退货记录");
             }
-            return Result.success(returnOrder);
+            
+            // 返回最新的退货记录
+            return Result.success(returns.get(0));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error(500, "查询失败：" + e.getMessage());
+        }
+    }
+
+    @Operation(summary = "查询用户的退货列表")
+    @GetMapping("/list")
+    public Result<List<ReturnOrder>> getUserReturns(
+        @RequestHeader("Authorization") String token
+    ) {
+        try {
+            // 从token获取用户ID
+            Long userId = getUserIdFromToken(token);
+            List<ReturnOrder> returns = returnOrderService.getUserReturns(userId);
+            return Result.success(returns);
         } catch (Exception e) {
             e.printStackTrace();
             return Result.error(500, "查询失败：" + e.getMessage());
@@ -55,21 +77,6 @@ public class ReturnOrderController {
         } catch (Exception e) {
             e.printStackTrace();
             return Result.error(500, "更新失败：" + e.getMessage());
-        }
-    }
-
-    @Operation(summary = "查询用户的退货列表")
-    @GetMapping("/user/{userId}")
-    public Result<List<ReturnOrder>> getUserReturns(
-        @Parameter(description = "用户ID") @PathVariable Long userId,
-        @RequestHeader("Authorization") String token
-    ) {
-        try {
-            List<ReturnOrder> returns = returnOrderService.getUserReturns(userId);
-            return Result.success(returns);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Result.error(500, "查询失败：" + e.getMessage());
         }
     }
 
@@ -107,5 +114,12 @@ public class ReturnOrderController {
             }
             return Result.error(500, "创建退货申请失败：" + e.getMessage());
         }
+    }
+
+    private Long getUserIdFromToken(String token) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        return jwtUtil.getUserIdFromToken(token);
     }
 } 
