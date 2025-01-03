@@ -98,6 +98,15 @@ const routes: RouteRecordRaw[] = [
           title: '个人信息',
           requiresAuth: true
         }
+      },
+      {
+        path: 'coupons',
+        name: 'Coupons',
+        component: () => import('@/views/coupons.vue'),
+        meta: {
+          title: '优惠券中心',
+          requiresAuth: true
+        }
       }
     ]
   }
