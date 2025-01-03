@@ -33,41 +33,36 @@ public class UserCouponServiceImpl implements UserCouponService {
     @Override
     @Transactional
     public boolean receiveCoupon(Long userId, Long couponId) {
-        // 1. 检查用户是否已经领取过该优惠券
-        if (userCouponMapper.checkUserCouponExists(userId, couponId)) {
-            throw new BusinessException("您已领取过该优惠券");
-        }
-        
-        // 2. 获取优惠券信息并加锁
+        // 1. 获取优惠券信息并加锁
         Coupon coupon = couponMapper.selectByIdForUpdate(couponId);
         if (coupon == null) {
             throw new BusinessException("优惠券不存在");
         }
         
-        // 3. 检查优惠券状态
+        // 2. 检查优惠券状态
         if (coupon.getStatus() != 1) {
             throw new BusinessException("优惠券已禁用");
         }
         
-        // 4. 检查优惠券是否在有效期内
+        // 3. 检查优惠券是否在有效期内
         LocalDateTime now = LocalDateTime.now();
         if (now.isBefore(coupon.getStartTime()) || now.isAfter(coupon.getEndTime())) {
             throw new BusinessException("优惠券不在有效期内");
         }
         
-        // 5. 检查优惠券是否还有剩余数量
+        // 4. 检查优惠券是否还有剩余数量
         if (coupon.getRemain() <= 0) {
             throw new BusinessException("优惠券已被领完");
         }
         
-        // 6. 创建用户优惠券记录
+        // 5. 创建用户优惠券记录
         UserCoupon userCoupon = new UserCoupon();
         userCoupon.setUserId(userId);
         userCoupon.setCouponId(couponId);
         userCoupon.setStatus(0); // 0-未使用
         userCoupon.setCreateTime(now);
         
-        // 7. 减少优惠券剩余数量并更新
+        // 6. 减少优惠券剩余数量并更新
         int oldRemain = coupon.getRemain();
         int newRemain = oldRemain - 1;
         int rows = couponMapper.updateRemainById(couponId, newRemain, oldRemain, now);
@@ -75,7 +70,7 @@ public class UserCouponServiceImpl implements UserCouponService {
             throw new BusinessException("优惠券已被领完或更新失败");
         }
         
-        // 8. 保存用户优惠券记录
+        // 7. 保存用户优惠券记录
         return userCouponMapper.insert(userCoupon) > 0;
     }
 
