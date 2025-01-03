@@ -114,4 +114,9 @@ public class ReturnOrderServiceImpl implements ReturnOrderService {
         
         return returnOrder;
     }
+
+    @Override
+    public ReturnOrder getReturnOrderById(Long returnId) {
+        return returnOrderMapper.selectOneById(returnId);
+    }
 } 
