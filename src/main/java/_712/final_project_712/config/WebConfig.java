@@ -25,6 +25,13 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 添加 Knife4j 资源处理
+        registry.addResourceHandler("/doc.html")
+                .addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/webjars/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/");
+
+        // 处理其他静态资源
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/")
                 .resourceChain(true)
@@ -32,6 +39,13 @@ public class WebConfig implements WebMvcConfigurer {
                     @Override
                     protected Resource getResource(String resourcePath, Resource location) throws IOException {
                         Resource requestedResource = location.createRelative(resourcePath);
+                        // 排除 Knife4j 相关路径
+                        if (resourcePath.startsWith("doc.html") ||
+                            resourcePath.startsWith("webjars") ||
+                            resourcePath.startsWith("v3/api-docs") ||
+                            resourcePath.startsWith("swagger-ui")) {
+                            return null;
+                        }
                         return requestedResource.exists() && requestedResource.isReadable() ? requestedResource
                                 : new ClassPathResource("/static/index.html");
                     }
@@ -72,6 +86,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
+                        "/doc.html",
+                        "/webjars/**",
                         "/api/product/**",
                         "/api/review/list",
                         "/api/review/*/detail",
