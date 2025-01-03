@@ -54,15 +54,20 @@ public class UserCouponServiceImpl implements UserCouponService {
         if (coupon.getRemain() <= 0) {
             throw new BusinessException("优惠券已被领完");
         }
+
+        // 5. 检查用户是否已经领取过该优惠券
+        if (userCouponMapper.checkUserCouponExists(userId, couponId)) {
+            throw new BusinessException("您已经领取过该优惠券");
+        }
         
-        // 5. 创建用户优惠券记录
+        // 6. 创建用户优惠券记录
         UserCoupon userCoupon = new UserCoupon();
         userCoupon.setUserId(userId);
         userCoupon.setCouponId(couponId);
         userCoupon.setStatus(0); // 0-未使用
         userCoupon.setCreateTime(now);
         
-        // 6. 减少优惠券剩余数量并更新
+        // 7. 减少优惠券剩余数量并更新
         int oldRemain = coupon.getRemain();
         int newRemain = oldRemain - 1;
         int rows = couponMapper.updateRemainById(couponId, newRemain, oldRemain, now);
@@ -70,7 +75,7 @@ public class UserCouponServiceImpl implements UserCouponService {
             throw new BusinessException("优惠券已被领完或更新失败");
         }
         
-        // 7. 保存用户优惠券记录
+        // 8. 保存用户优惠券记录
         return userCouponMapper.insert(userCoupon) > 0;
     }
 
