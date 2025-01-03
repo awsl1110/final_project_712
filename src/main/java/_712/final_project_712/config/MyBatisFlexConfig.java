@@ -6,8 +6,6 @@ import com.mybatisflex.spring.FlexSqlSessionFactoryBean;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-
 import javax.sql.DataSource;
 
 @Configuration
@@ -22,10 +20,6 @@ public class MyBatisFlexConfig {
         FlexConfiguration configuration = new FlexConfiguration();
         configuration.setMapUnderscoreToCamelCase(true);
         factoryBean.setConfiguration(configuration);
-        
-        // 设置Mapper XML的位置
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        factoryBean.setMapperLocations(resolver.getResources("classpath*:/mapper/*.xml"));
         
         // 设置实体类的包路径
         factoryBean.setTypeAliasesPackage("_712.final_project_712.model");
