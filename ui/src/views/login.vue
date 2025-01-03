@@ -1,13 +1,13 @@
 <template>
   <div class="login-container">
-    <el-card class="login-card">
+    <el-card class="login-box">
       <template #header>
-        <div class="card-header">
-          <span>用户登录</span>
+        <div class="header">
+          <span class="title">用户登录</span>
         </div>
       </template>
       
-      <el-form ref="formRef" :model="loginForm" :rules="rules" class="login-form">
+      <el-form ref="formRef" :model="loginForm" :rules="rules">
         <el-form-item prop="username">
           <el-input v-model="loginForm.username" placeholder="用户名">
             <template #prefix>
@@ -31,22 +31,23 @@
                 <el-icon><Key /></el-icon>
               </template>
             </el-input>
-            <img :src="captchaUrl" @click="refreshCaptcha" class="captcha-img" alt="验证码" />
+            <img 
+              :src="captchaUrl" 
+              alt="验证码" 
+              class="captcha-img"
+              @click="refreshCaptcha"
+            />
           </div>
         </el-form-item>
 
-        <el-form-item>
-          <el-button type="primary" :loading="loading" @click="handleLogin" class="login-button">
-            登录
-          </el-button>
-          <div class="register-text">
-            没有账号？
-            <el-button link type="primary" @click="router.push('/register')">
-              注册
-            </el-button>
-          </div>
-        </el-form-item>
+        <el-button type="primary" class="login-button" @click="handleLogin" :loading="loading">
+          登录
+        </el-button>
       </el-form>
+
+      <div class="register-link">
+        <el-link type="primary" @click="router.push('/register')">还没有账号？立即注册</el-link>
+      </div>
     </el-card>
   </div>
 </template>
@@ -117,28 +118,43 @@ const handleLogin = async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f5f5f5;
-  
+  background-color: var(--el-fill-color-light);
 }
 
-.login-form {
-  width: 280px;
-  margin: 0 auto;
+.login-box {
+  width: 400px;
+  
+  .header {
+    text-align: center;
+    
+    .title {
+      font-size: 20px;
+      font-weight: bold;
+    }
+  }
 }
 
 .captcha-container {
   display: flex;
   gap: 12px;
   
+  .el-input {
+    flex: 1;
+  }
+  
   .captcha-img {
     height: 40px;
     cursor: pointer;
+    border-radius: 4px;
   }
 }
+
 .login-button {
   width: 100%;
+  margin-top: 12px;
 }
-.register-text {
+
+.register-link {
   margin-top: 16px;
   text-align: center;
 }

@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { getProductDetail } from '@/api/product'
 import { addToCart } from '@/api/cart'
 import { addToFavorite } from '@/api/favorite'
 import type { Product } from '@/api/product'
 import type { Result } from '@/types/api'
 import type { AddToCartParams, CartResponse } from '@/api/cart'
-import type { AddToFavoriteParams, AddToFavoriteRes } from '@/api/favorite'
-import { ElMessage, ElInputNumber } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { ShoppingCart, Star } from '@element-plus/icons-vue'
 import ProductReviews from '@/components/ProductReviews.vue'
 
@@ -72,19 +71,13 @@ const handleAddToFavorite = async () => {
   }
 
   try {
-    console.log('开始添加收藏，商品ID:', product.value.id)
     const response = await addToFavorite(product.value.id!)
-    console.log('收藏响应:', response)
     const res = response.data
     if (res.code === 200) {
       ElMessage.success('收藏成功')
     }
   } catch (error: any) {
     // 错误已在请求拦截器中处理
-    console.error('收藏失败:', error)
-    if (error.response) {
-      console.error('错误响应:', error.response)
-    }
   }
 }
 

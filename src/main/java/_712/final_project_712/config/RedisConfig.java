@@ -109,7 +109,7 @@ public class RedisConfig {
         config.setPassword(password);
         config.setDatabase(database);
 
-        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+        GenericObjectPoolConfig<Object> poolConfig = new GenericObjectPoolConfig<>();
         poolConfig.setMaxTotal(lettuce.getPool().getMaxActive());
         poolConfig.setMaxIdle(lettuce.getPool().getMaxIdle());
         poolConfig.setMinIdle(lettuce.getPool().getMinIdle());

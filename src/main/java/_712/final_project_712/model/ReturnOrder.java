@@ -1,6 +1,7 @@
 package _712.final_project_712.model;
 
 import com.mybatisflex.annotation.Id;
+import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 @Table("order_return")
 @Schema(description = "退货订单实体类")
 public class ReturnOrder {
-    @Id
+    @Id(keyType = KeyType.Auto)
     private Long id;
     
     private Long orderId;
