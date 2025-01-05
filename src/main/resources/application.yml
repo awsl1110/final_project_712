@@ -2,8 +2,8 @@ spring:
   application:
     name: final_project_712
   datasource:
-    url: jdbc:mysql://192.168.100.1:3306/db_712?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8
-    username: db_admin
+    url: jdbc:mysql://127.0.0.1:3306/db_712?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8
+    username: root
     password: 12345678
     hikari:
       pool-name: HikariCP
@@ -36,9 +36,8 @@ spring:
       console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
   data:
     redis:
-      host: 192.168.100.1
+      host: 127.0.0.1
       port: 6379
-      password: password
       database: 0
       timeout: 5000
       lettuce:
